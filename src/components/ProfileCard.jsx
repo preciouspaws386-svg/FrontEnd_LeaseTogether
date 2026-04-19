@@ -14,7 +14,7 @@ export default function ProfileCard({ user, onRequestMeetUp, onClick }) {
     <div className="card profile-card" onClick={onClick} style={{ opacity: user.isOpenToRoommate ? 1 : 0.6 }}>
       {firstPhoto ? (
         <div style={{ margin: '-20px -20px 14px', height: 120, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--line)' }}>
-          <img src={firstPhoto} alt={`${displayName} photo`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={firstPhoto} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       ) : null}
       {user.intent && (
@@ -27,7 +27,7 @@ export default function ProfileCard({ user, onRequestMeetUp, onClick }) {
           {firstPhoto ? (
             <img
               src={firstPhoto}
-              alt={`${displayName} avatar`}
+              alt={displayName}
               style={{ width: 44, height: 44, borderRadius: 11, objectFit: 'cover', border: '1px solid var(--line)' }}
             />
           ) : (
