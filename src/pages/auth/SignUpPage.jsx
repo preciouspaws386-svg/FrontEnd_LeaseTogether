@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { COMMUNITIES, formatCommunity } from '../../data/communities';
+import { compressImage } from '../../utils/compressImage';
 
 const INITIAL = {
   firstName: '',
@@ -36,6 +37,7 @@ export default function SignUpPage() {
   const [verifiedApartment, setVerifiedApartment] = useState(null);
   const [manualApartment, setManualApartment] = useState(false);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
   const [touched, setTouched] = useState({});
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -57,14 +59,6 @@ export default function SignUpPage() {
   const touch = (k) => setTouched((t) => ({ ...t, [k]: true }));
   const touchMany = (keys) => setTouched((t) => keys.reduce((acc, k) => ({ ...acc, [k]: true }), { ...t }));
 
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-
   const onPhotosSelected = async (files) => {
     const list = Array.from(files || []);
     if (list.length === 0) return;
@@ -74,12 +68,7 @@ export default function SignUpPage() {
 
     const toAdd = list.slice(0, remaining);
     try {
-      const base64s = await Promise.all(
-        toAdd.map(async (f) => {
-          if (!String(f.type || '').startsWith('image/')) throw new Error('Only images are allowed');
-          return await fileToBase64(f);
-        })
-      );
+      const base64s = await Promise.all(toAdd.map((f) => compressImage(f, { maxSizeKB: 500, maxDim: 800, quality: 0.7 })));
       set('photos', [...current, ...base64s].slice(0, 5));
     } catch (err) {
       toast.error(err?.message || 'Something went wrong');
@@ -147,15 +136,18 @@ export default function SignUpPage() {
   );
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
     touchMany(['firstName', 'lastInitial', 'email', 'password', 'apartmentName', 'age', 'intent']);
     if (errors.firstName || errors.lastInitial || errors.email || errors.password || errors.apartmentName || errors.age || errors.intent) {
       if (errors.firstName || errors.lastInitial || errors.email || errors.password || errors.apartmentName) setStep(1);
       else setStep(2);
       return;
     }
+    submittingRef.current = true;
     setLoading(true);
     try {
       const payload = { ...form, age: form.age ? parseInt(form.age, 10) : undefined };
+      if (Array.isArray(payload.photos)) payload.photos = payload.photos.filter(Boolean).slice(0, 5);
       await register(payload);
       toast.success('✅ Profile created! Welcome to the community');
       navigate('/browse');
@@ -163,6 +155,7 @@ export default function SignUpPage() {
       toastFriendlyError(err);
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
 

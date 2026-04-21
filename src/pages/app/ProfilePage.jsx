@@ -6,6 +6,7 @@ import TopBar from '../../components/Layout/TopBar';
 import Modal from '../../components/UI/Modal';
 import TagPill from '../../components/UI/TagPill';
 import IntentBadge from '../../components/UI/IntentBadge';
+import { compressImage } from '../../utils/compressImage';
 
 export default function ProfilePage() {
   const { user, updateStatus, updateProfile, updatePhotos } = useAuth();
@@ -18,27 +19,14 @@ export default function ProfilePage() {
 
   const displayName = `${user.firstName} ${user.lastInitial}.`;
 
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-
   const onPhotosSelected = async (files) => {
     const list = Array.from(files || []);
     if (list.length === 0) return;
     if (list.length > 5) return toast.error('You can upload up to 5 photos');
     setPhotoSaving(true);
     try {
-      const base64s = await Promise.all(
-        list.map(async (f) => {
-          if (!String(f.type || '').startsWith('image/')) throw new Error('Only images are allowed');
-          return await fileToBase64(f);
-        })
-      );
-      await updatePhotos(base64s.slice(0, 5));
+      const base64s = await Promise.all(list.map((f) => compressImage(f, { maxSizeKB: 500, maxDim: 800, quality: 0.7 })));
+      await updatePhotos(base64s.filter(Boolean).slice(0, 5));
       toast.success('Photos updated');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong');

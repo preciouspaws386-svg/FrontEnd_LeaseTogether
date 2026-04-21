@@ -10,12 +10,20 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        if (!mounted) return;
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       try {
         const res = await api.get('/auth/me');
         if (!mounted) return;
         setUser(res.data?.user || null);
       } catch (err) {
         if (!mounted) return;
+        localStorage.removeItem('token');
         setUser(null);
       } finally {
         if (!mounted) return;
@@ -30,18 +38,21 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
+    if (res.data?.token) localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
     return res.data.user;
   };
 
   const register = async (formData) => {
     const res = await api.post('/auth/register', formData);
+    if (res.data?.token) localStorage.setItem('token', res.data.token);
     setUser(res.data.user);
     return res.data.user;
   };
 
   const logout = async () => {
     await api.post('/auth/logout');
+    localStorage.removeItem('token');
     setUser(null);
   };
 
