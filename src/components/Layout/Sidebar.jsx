@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiSearch, FiBell, FiCalendar, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiBell, FiCalendar, FiUser, FiLogOut, FiHome } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import StatusBadge from '../UI/StatusBadge';
@@ -61,6 +61,12 @@ export default function Sidebar() {
             <FiCalendar />
           </span>
           My Meet-Ups
+        </NavLink>
+        <NavLink to="/listings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <span className="nav-icon">
+            <FiHome />
+          </span>
+          Student Housing
         </NavLink>
         <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">

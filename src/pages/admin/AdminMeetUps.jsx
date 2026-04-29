@@ -72,9 +72,6 @@ export default function AdminMeetUps() {
                 <tr>
                   <th>Requester</th>
                   <th>Receiver</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Duration</th>
                   <th>Code</th>
                   <th>Status</th>
                   <th>Admin Action</th>
@@ -83,7 +80,7 @@ export default function AdminMeetUps() {
               <tbody>
                 {meetups.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={{ padding: 22, color: 'var(--grey-2)' }}>
+                    <td colSpan="5" style={{ padding: 22, color: 'var(--grey-2)' }}>
                       No meet-ups found
                     </td>
                   </tr>
@@ -92,9 +89,6 @@ export default function AdminMeetUps() {
                     <tr key={m._id}>
                       <td>{m.requester ? `${m.requester.firstName} ${m.requester.lastInitial}.` : '—'}</td>
                       <td>{m.receiver ? `${m.receiver.firstName} ${m.receiver.lastInitial}.` : '—'}</td>
-                      <td>{m.scheduledDate}</td>
-                      <td>{m.scheduledTime}</td>
-                      <td>{m.duration}</td>
                       <td style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>{m.confirmationCode}</td>
                       <td>
                         <span className={`status-badge ${STATUS_CLASS[m.status] || ''}`}>

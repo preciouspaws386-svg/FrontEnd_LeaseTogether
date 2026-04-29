@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { COMMUNITIES, formatCommunity } from '../../data/communities';
 import { compressImage } from '../../utils/compressImage';
+import axios from '../../api/axios';
 
 const INITIAL = {
   firstName: '',
@@ -18,6 +19,9 @@ const INITIAL = {
   bio: '',
   moveInTimeframe: 'ASAP',
   intent: '',
+  school: '',
+  schoolName: '',
+  campusPreference: '',
   socialVibe: '',
   weekendPlans: '',
   energyLevel: '',
@@ -31,6 +35,63 @@ const INITIAL = {
   hobbies: '',
 };
 
+// Group schools by state for the dropdown
+const SCHOOLS_BY_STATE = {
+  TX: ['University of Texas at Austin', 'Texas A&M University', 'University of Houston', 'Texas State University', 'Baylor University'],
+  CO: ['University of Colorado Boulder', 'University of Denver', 'Colorado State University', 'University of Colorado Denver'],
+  WA: ['University of Washington', 'Washington State University', 'Seattle University', 'Western Washington University'],
+  CA: ['University of California Los Angeles', 'University of California Berkeley', 'Stanford University', 'USC', 'San Diego State University'],
+  NY: ['New York University', 'Columbia University', 'Cornell University', 'SUNY Schools', 'Fordham University'],
+  FL: ['University of Florida', 'Florida State University', 'University of Miami', 'Florida International University'],
+  OH: ['Ohio State University', 'Ohio University', 'University of Cincinnati', 'Case Western Reserve'],
+  MI: ['University of Michigan', 'Michigan State University', 'Wayne State University'],
+  IL: ['University of Illinois', 'Northwestern University', 'DePaul University', 'Loyola University'],
+  PA: ['University of Pennsylvania', 'Penn State', 'Carnegie Mellon', 'Temple University'],
+  GA: ['Georgia Tech', 'University of Georgia', 'Georgia State University', 'Emory University'],
+  NC: ['Duke University', 'UNC Chapel Hill', 'NC State', 'Wake Forest'],
+  AZ: ['Arizona State University', 'University of Arizona'],
+  MA: ['Harvard', 'MIT', 'Boston University', 'Northeastern University'],
+  VA: ['University of Virginia', 'Virginia Tech', 'George Mason University'],
+  NJ: ['Rutgers', 'Princeton', 'Stevens Institute'],
+  OR: ['University of Oregon', 'Oregon State University'],
+  MN: ['University of Minnesota', 'Minnesota State University'],
+  WI: ['University of Wisconsin', 'Marquette University'],
+  TN: ['Vanderbilt University', 'University of Tennessee', 'Middle Tennessee State'],
+  MD: ['University of Maryland', 'Johns Hopkins', 'Towson University'],
+  CT: ['Yale University', 'University of Connecticut', ' Fairfield University'],
+  MO: ['Washington University in St. Louis', 'University of Missouri', 'Missouri State'],
+  IN: ['Indiana University', 'Purdue University', 'Notre Dame'],
+  SC: ['University of South Carolina', 'Clemson University'],
+  KY: ['University of Kentucky', 'Louisville University'],
+  LA: ['Tulane University', 'Louisiana State University', 'University of Louisiana'],
+  OK: ['University of Oklahoma', 'Oklahoma State University'],
+  KS: ['University of Kansas', 'Kansas State University'],
+  IA: ['University of Iowa', 'Iowa State University'],
+  AR: ['University of Arkansas', 'Arkansas State University'],
+  NV: ['University of Nevada Las Vegas', 'University of Nevada Reno'],
+  UT: ['University of Utah', 'Brigham Young University', 'Utah State University'],
+  NM: ['University of New Mexico', 'New Mexico State University'],
+  NE: ['University of Nebraska', 'Creighton University'],
+  ID: ['University of Idaho', 'Boise State University'],
+  HI: ['University of Hawaii', 'Hawaii Pacific University'],
+  AL: ['University of Alabama', 'Auburn University', 'UAB'],
+  MS: ['University of Mississippi', 'Mississippi State University'],
+  WV: ['West Virginia University'],
+  NH: ['Dartmouth College', 'University of New Hampshire'],
+  ME: ['University of Maine', 'Bowdoin College'],
+  VT: ['University of Vermont', 'Middlebury College'],
+  RI: ['Brown University', 'Providence College'],
+  DE: ['University of Delaware', 'Delaware State University'],
+  DC: ['Georgetown University', 'George Washington University', 'American University'],
+  AK: ['University of Alaska Anchorage', 'University of Alaska Fairbanks'],
+  MT: ['University of Montana', 'Montana State University'],
+  WY: ['University of Wyoming'],
+  SD: ['University of South Dakota', 'South Dakota State'],
+  ND: ['University of North Dakota', 'North Dakota State'],
+};
+
+const STATES = Object.keys(SCHOOLS_BY_STATE).sort();
+
 export default function SignUpPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL);
@@ -41,6 +102,25 @@ export default function SignUpPage() {
   const [touched, setTouched] = useState({});
   const { register } = useAuth();
   const navigate = useNavigate();
+  
+  // School selection state
+  const [selectedState, setSelectedState] = useState('');
+  const [schoolSearch, setSchoolSearch] = useState('');
+  const [filteredSchools, setFilteredSchools] = useState([]);
+
+  // Filter schools based on search
+  useEffect(() => {
+    if (schoolSearch.trim()) {
+      const search = schoolSearch.toLowerCase();
+      const allSchools = Object.values(SCHOOLS_BY_STATE).flat();
+      const matches = allSchools.filter(s => s.toLowerCase().includes(search)).slice(0, 10);
+      setFilteredSchools(matches);
+    } else if (selectedState && SCHOOLS_BY_STATE[selectedState]) {
+      setFilteredSchools(SCHOOLS_BY_STATE[selectedState]);
+    } else {
+      setFilteredSchools([]);
+    }
+  }, [schoolSearch, selectedState]);
 
   useEffect(() => {
     const apt = sessionStorage.getItem('verifiedApartment');
@@ -159,7 +239,7 @@ export default function SignUpPage() {
     }
   };
 
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 5;
 
   return (
     <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: 40, paddingBottom: 40 }}>
@@ -178,7 +258,7 @@ export default function SignUpPage() {
         {step === 1 && (
           <div>
             <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
-              Step 1 of 4 — Account Info
+              Step 1 of 5 — Account Info
             </p>
             {verifiedApartment ? (
               <div
@@ -328,7 +408,106 @@ export default function SignUpPage() {
         {step === 2 && (
           <div>
             <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
-              Step 2 of 4 — About You
+              Step 2 of 5 — Select Your School
+            </p>
+            <div className="form-group">
+              <label className="form-label">🎓 Which university do you attend?</label>
+              <div style={{ fontSize: 12, color: 'var(--grey-2)', marginBottom: 12 }}>
+                Search for your school or select your state to browse
+              </div>
+              
+              {/* State selector */}
+              <div style={{ marginBottom: 12 }}>
+                <select
+                  className="form-select"
+                  value={selectedState}
+                  onChange={(e) => {
+                    setSelectedState(e.target.value);
+                    setSchoolSearch('');
+                    setForm(f => ({ ...f, school: '', schoolName: '' }));
+                  }}
+                  style={{ marginBottom: 8 }}
+                >
+                  <option value="">Select your state</option>
+                  {STATES.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* School search */}
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Search for your university..."
+                value={schoolSearch}
+                onChange={(e) => setSchoolSearch(e.target.value)}
+                style={{ marginBottom: 8 }}
+              />
+              
+              {/* School list */}
+              <div className="opts" style={{ maxHeight: 200, overflowY: 'auto' }}>
+                {filteredSchools.length > 0 ? (
+                  filteredSchools.map(school => (
+                    <div
+                      key={school}
+                      className={`opt ${form.schoolName === school ? 'on' : ''}`}
+                      onClick={() => {
+                        setForm(f => ({ ...f, school: school, schoolName: school }));
+                        touch('schoolName');
+                      }}
+                    >
+                      🎓 {school}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: 12, textAlign: 'center', color: 'var(--grey-2)', fontSize: 13 }}>
+                    {selectedState || schoolSearch ? 'No schools found. Try a different search.' : 'Select a state or start typing to search'}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">🏢 What's your housing preference?</label>
+              <div className="opts">
+                {['On Campus', 'Off Campus', 'No Preference'].map(v => (
+                  <div
+                    key={v}
+                    className={`opt ${form.campusPreference === v ? 'on' : ''}`}
+                    onClick={() => set('campusPreference', v)}
+                  >
+                    {v === 'On Campus' ? '🏫' : v === 'Off Campus' ? '🏢' : '🤷'} {v}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-secondary" onClick={() => setStep(1)}>
+                ← Back
+              </button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={() => {
+                  if (!form.schoolName) {
+                    toast.error('Please select your school');
+                    return;
+                  }
+                  setStep(3);
+                }}
+              >
+                Continue →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
+              Step 3 of 5 — About You
             </p>
             <div className="form-group">
               <label className="form-label">Profile photos (optional)</label>
@@ -422,7 +601,7 @@ export default function SignUpPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" onClick={() => setStep(1)}>
+              <button className="btn btn-secondary" onClick={() => setStep(2)}>
                 ← Back
               </button>
               <button
@@ -431,7 +610,7 @@ export default function SignUpPage() {
                 onClick={() => {
                   touchMany(['age', 'intent']);
                   if (errors.age || errors.intent) return;
-                  setStep(3);
+                  setStep(4);
                 }}
               >
                 Continue →
@@ -440,10 +619,10 @@ export default function SignUpPage() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div>
             <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
-              Step 3 of 4 — Your Vibe
+              Step 4 of 5 — Your Vibe
             </p>
             <div className="form-group">
               <label className="form-label">😎 Your social vibe?</label>
@@ -501,20 +680,20 @@ export default function SignUpPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" onClick={() => setStep(2)}>
+              <button className="btn btn-secondary" onClick={() => setStep(3)}>
                 ← Back
               </button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStep(4)}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setStep(5)}>
                 Continue →
               </button>
             </div>
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div>
             <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
-              Step 4 of 4 — Almost Done
+              Step 5 of 5 — Almost Done
             </p>
             <div className="form-group">
               <label className="form-label">🏃 Your lifestyle pace?</label>
@@ -576,7 +755,7 @@ export default function SignUpPage() {
               <input className="form-input" type="text" placeholder="Gym, Gaming, Sports, Music..." value={form.hobbies} onChange={(e) => set('hobbies', e.target.value)} />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" onClick={() => setStep(3)}>
+              <button className="btn btn-secondary" onClick={() => setStep(4)}>
                 ← Back
               </button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit} disabled={loading}>

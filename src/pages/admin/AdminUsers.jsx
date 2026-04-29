@@ -29,6 +29,28 @@ export default function AdminUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const toggleDisabled = async (u) => {
+    try {
+      const next = !u.isDisabled;
+      await api.patch(`/admin/users/${u._id}/disable`, { isDisabled: next });
+      toast.success(next ? 'User disabled' : 'User enabled');
+      await loadUsers(apartmentId);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update user');
+    }
+  };
+
+  const resetSchool = async (u) => {
+    if (!window.confirm('Reset this user school assignment? They will be forced to re-select on next login.')) return;
+    try {
+      await api.patch(`/admin/users/${u._id}/reset-school`);
+      toast.success('School reset');
+      await loadUsers(apartmentId);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reset school');
+    }
+  };
+
   return (
     <div className="app-layout">
       <AdminSidebar />
@@ -62,16 +84,20 @@ export default function AdminUsers() {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Apartment</th>
+                  <th>School</th>
+                  <th>Campus</th>
                   <th>Status</th>
                   <th>Major</th>
                   <th>Age</th>
                   <th>Role</th>
+                  <th>Disabled</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan="7" style={{ padding: 22, color: 'var(--grey-2)' }}>
+                    <td colSpan="11" style={{ padding: 22, color: 'var(--grey-2)' }}>
                       No users
                     </td>
                   </tr>
@@ -83,6 +109,8 @@ export default function AdminUsers() {
                       </td>
                       <td style={{ color: 'var(--grey-2)' }}>{u.email}</td>
                       <td>{u.apartment?.name || u.apartmentName || '—'}</td>
+                      <td>{u.school?.name || '—'}</td>
+                      <td>{u.campusPreference || '—'}</td>
                       <td>
                         <StatusBadge isOpen={!!u.isOpenToRoommate} />
                       </td>
@@ -101,6 +129,20 @@ export default function AdminUsers() {
                         >
                           {u.role}
                         </span>
+                      </td>
+                      <td>{u.isDisabled ? 'Yes' : 'No'}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className={`btn btn-xs ${u.isDisabled ? 'btn-secondary' : 'btn-danger-ghost'}`}
+                            onClick={() => toggleDisabled(u)}
+                          >
+                            {u.isDisabled ? 'Enable' : 'Disable'}
+                          </button>
+                          <button className="btn btn-secondary btn-xs" onClick={() => resetSchool(u)}>
+                            Reset School
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

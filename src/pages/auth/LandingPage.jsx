@@ -9,6 +9,9 @@ export default function LandingPage() {
         <div className="landing-headline">
           Find Your Perfect <span style={{ color: 'var(--accent)' }}>Roommate</span>, Not a Stranger
         </div>
+        <div style={{ marginTop: 10, color: 'var(--grey-2)', fontSize: 13.5, textAlign: 'center', fontWeight: 600 }}>
+          For Residents &amp; Students
+        </div>
         <p className="landing-sub">
           Browse resident profiles in your apartment community, request an Apartment Meet-Up, and receive a confirmation
           code — all in seconds.
@@ -20,6 +23,20 @@ export default function LandingPage() {
           <button className="btn btn-secondary" onClick={() => navigate('/login')}>
             Sign In
           </button>
+        </div>
+
+        {/* Subscription CTA (Residents & Students) */}
+        <div className="landing-cta" style={{ marginTop: 18, justifyContent: 'center' }}>
+          <a
+            href="https://square.link/u/VMsuUwq0?src=sheet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 18px' }}
+          >
+            <span style={{ fontSize: 16 }}>🔑</span>
+            Get Access — $9.95/month
+          </a>
         </div>
 
         <div style={{ display: 'flex', gap: 22, justifyContent: 'center', flexWrap: 'wrap', marginTop: 36 }}>

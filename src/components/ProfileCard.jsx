@@ -5,9 +5,18 @@ import IntentBadge from './UI/IntentBadge';
 
 export default function ProfileCard({ user, onRequestMeetUp, onClick }) {
   const displayName = `${user.firstName} ${user.lastInitial}.`;
-  const tags = [user.socialVibe, user.lifestylePace, user.hobbies ? user.hobbies.split(',')[0].trim() : null]
-    .filter(Boolean)
-    .slice(0, 3);
+
+  const memberSinceLabel = user?.memberSince?.month && user?.memberSince?.year
+    ? `Member since ${user.memberSince.month} ${user.memberSince.year}`
+    : '';
+
+  const tagsFromVibes = [
+    ...(user?.personalityVibe?.socialVibe || []),
+    ...(user?.personalityVibe?.lifestylePace || []),
+  ];
+
+  const hobbyTag = user.hobbies ? user.hobbies.split(',')[0].trim() : null;
+  const tags = [...tagsFromVibes, hobbyTag].filter(Boolean).slice(0, 3);
   const firstPhoto = Array.isArray(user.photos) && user.photos.length > 0 ? user.photos[0] : null;
 
   return (
@@ -35,6 +44,9 @@ export default function ProfileCard({ user, onRequestMeetUp, onClick }) {
           )}
           <div>
             <div className="profile-name">{displayName}</div>
+            {memberSinceLabel ? (
+              <div style={{ fontSize: 11, color: 'var(--grey-2)', marginTop: 3 }}>{memberSinceLabel}</div>
+            ) : null}
             <div className="profile-apt">
               {user.apartmentName || user.apartment?.name || 'Community'} · Age {user.age || '—'}
             </div>

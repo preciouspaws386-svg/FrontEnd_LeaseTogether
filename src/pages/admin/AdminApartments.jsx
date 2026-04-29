@@ -5,7 +5,17 @@ import AdminSidebar from '../../components/Layout/AdminSidebar';
 import TopBar from '../../components/Layout/TopBar';
 import Modal from '../../components/UI/Modal';
 
-const EMPTY = { name: '', address: '', city: '', state: '', zipCode: '', accessCode: '' };
+const EMPTY = {
+  name: '',
+  address: '',
+  city: '',
+  state: '',
+  zipCode: '',
+  accessCode: '',
+  phoneNumber: '',
+  logoUrl: '',
+  websiteLink: '',
+};
 
 export default function AdminApartments() {
   const [apartments, setApartments] = useState([]);
@@ -115,7 +125,17 @@ export default function AdminApartments() {
                             className="btn btn-secondary btn-xs"
                             onClick={() => {
                               setEdit(a);
-                              setForm({ name: a.name, address: a.address, city: a.city, state: a.state, zipCode: a.zipCode, accessCode: a.accessCode || '' });
+                              setForm({
+                                name: a.name,
+                                address: a.address,
+                                city: a.city,
+                                state: a.state,
+                                zipCode: a.zipCode,
+                                accessCode: a.accessCode || '',
+                                phoneNumber: a.phoneNumber || '',
+                                logoUrl: a.logoUrl || '',
+                                websiteLink: a.websiteLink || '',
+                              });
                             }}
                           >
                             Edit
@@ -142,6 +162,9 @@ export default function AdminApartments() {
           ['state', 'State'],
           ['zipCode', 'ZIP Code'],
           ['accessCode', 'Access Code (e.g. SUNRISE24)'],
+          ['phoneNumber', 'Phone Number'],
+          ['logoUrl', 'Logo URL / Base64'],
+          ['websiteLink', 'Website Link'],
         ].map(([k, label]) => (
           <div className="form-group" key={k}>
             <label className="form-label">{label}</label>
@@ -165,6 +188,9 @@ export default function AdminApartments() {
           ['state', 'State'],
           ['zipCode', 'ZIP Code'],
           ['accessCode', 'Access Code (e.g. SUNRISE24)'],
+          ['phoneNumber', 'Phone Number'],
+          ['logoUrl', 'Logo URL / Base64'],
+          ['websiteLink', 'Website Link'],
         ].map(([k, label]) => (
           <div className="form-group" key={k}>
             <label className="form-label">{label}</label>

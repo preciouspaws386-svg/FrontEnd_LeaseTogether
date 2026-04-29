@@ -10,19 +10,6 @@ import TagPill from '../../components/UI/TagPill';
 import ProfileAvatar from '../../components/UI/ProfileAvatar';
 import IntentBadge from '../../components/UI/IntentBadge';
 
-const TIMES = ['10:00 AM', '12:00 PM', '3:00 PM', '6:00 PM'];
-const DURATIONS = ['10 minutes', '15 minutes'];
-
-function buildDays() {
-  const labels = ['Today', 'Tomorrow', 'In 2 Days', 'In 3 Days', 'In 4 Days'];
-  return labels.map((label, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return { label, value: `${label} (${formatted})` };
-  });
-}
-
 export default function BrowsePage() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -30,7 +17,6 @@ export default function BrowsePage() {
   const [intentFilter, setIntentFilter] = useState('All');
   const [detailUser, setDetailUser] = useState(null);
   const [schedUser, setSchedUser] = useState(null);
-  const [sched, setSched] = useState({ day: '', time: '', duration: '10 minutes' });
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
@@ -53,22 +39,14 @@ export default function BrowsePage() {
     });
   }, [users, search, filter, intentFilter]);
 
-  const days = useMemo(() => buildDays(), []);
-
   const send = async () => {
-    if (!sched.day || !sched.time) return toast.error('Pick a day and time');
+    if (!schedUser) return toast.error('Select a profile first');
     setSending(true);
     try {
-      await api.post('/meetups', {
-        receiverId: schedUser._id,
-        scheduledDate: sched.day,
-        scheduledTime: sched.time,
-        duration: sched.duration,
-      });
+      await api.post('/meetups', { receiverId: schedUser._id });
       toast.success('✅ Meetup request sent!');
       setSchedUser(null);
       setDetailUser(null);
-      setSched({ day: '', time: '', duration: '10 minutes' });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Something went wrong');
     } finally {
@@ -84,9 +62,11 @@ export default function BrowsePage() {
           <input className="form-input" style={{ width: 240 }} value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name..." />
           <select className="form-select" style={{ width: 230 }} value={intentFilter} onChange={(e) => setIntentFilter(e.target.value)}>
             <option value="All">All intents</option>
-            <option value="Looking for a Roommate">Looking for a Roommate</option>
-            <option value="Looking to Swap Rooms">Looking to Swap Rooms</option>
-            <option value="Lease Available">Lease Available</option>
+            <option value="RM">Looking for a Roommate</option>
+            <option value="RS">Looking to Swap Rooms</option>
+            <option value="LT">Sublease / Lease Takeover</option>
+            <option value="GM">Group Match (3–4 Roommates)</option>
+            <option value="SM">Social / Meet Up</option>
           </select>
         </TopBar>
         <div className="page-body">
@@ -146,19 +126,24 @@ export default function BrowsePage() {
               </div>
             )}
             <div className="tag-row" style={{ marginBottom: 14 }}>
-              {[detailUser.socialVibe, detailUser.lifestylePace].filter(Boolean).map((t) => (
-                <TagPill key={t} label={t} />
-              ))}
+              {[
+                detailUser?.personalityVibe?.socialVibe?.[0],
+                detailUser?.personalityVibe?.lifestylePace?.[0],
+              ]
+                .filter(Boolean)
+                .map((t) => (
+                  <TagPill key={t} label={t} />
+                ))}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               {[
                 ['Age', detailUser.age],
                 ['Major', detailUser.major],
                 ['Move-in', detailUser.moveInTimeframe],
-                ['Social vibe', detailUser.socialVibe],
-                ['Lifestyle', detailUser.lifestylePace],
-                ['Recharges by', detailUser.rechargeStyle],
-                ['Conflict style', detailUser.conflictStyle],
+                ['Social vibe', detailUser?.personalityVibe?.socialVibe?.[0]],
+                ['Lifestyle', detailUser?.personalityVibe?.lifestylePace?.[0]],
+                ['Recharges by', detailUser?.personalityVibe?.rechargeStyle?.[0]],
+                ['Conflict style', detailUser?.personalityVibe?.conflictStyle?.[0]],
               ].map(([k, v]) => (
                 <div key={k}>
                   <div style={{ fontSize: 11, color: 'var(--grey-2)', marginBottom: 2 }}>{k}</div>
@@ -178,43 +163,12 @@ export default function BrowsePage() {
       <Modal
         isOpen={!!schedUser}
         onClose={() => setSchedUser(null)}
-        title={schedUser ? `Schedule a Meet-Up with ${schedUser.firstName} ${schedUser.lastInitial}.` : ''}
+        title={schedUser ? `Request a Meet-Up with ${schedUser.firstName} ${schedUser.lastInitial}.` : ''}
       >
         {schedUser && (
           <div>
-            <div className="form-group">
-              <label className="form-label">Pick Day</label>
-              <div className="sched-grid">
-                {days.map((d) => (
-                  <div key={d.value} className={`sched-opt ${sched.day === d.value ? 'on' : ''}`} onClick={() => setSched((s) => ({ ...s, day: d.value }))}>
-                    {d.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Pick Time</label>
-              <div className="sched-grid">
-                {TIMES.map((t) => (
-                  <div key={t} className={`sched-opt ${sched.time === t ? 'on' : ''}`} onClick={() => setSched((s) => ({ ...s, time: t }))}>
-                    {t}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Duration</label>
-              <div className="opts">
-                {DURATIONS.map((d) => (
-                  <div key={d} className={`opt ${sched.duration === d ? 'on' : ''}`} onClick={() => setSched((s) => ({ ...s, duration: d }))}>
-                    {d}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Location</label>
-              <input className="form-input" value="Leasing Office / Clubhouse" readOnly />
+            <div style={{ fontSize: 13.5, color: 'var(--grey-2)', marginBottom: 14 }}>
+              After they accept, you’ll both submit contact info to complete the match.
             </div>
             <button className="btn btn-primary btn-full" disabled={sending} onClick={send}>
               {sending ? 'Sending...' : 'Send Request'}

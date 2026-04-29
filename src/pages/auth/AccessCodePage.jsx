@@ -13,10 +13,18 @@ export default function AccessCodePage() {
     if (!code.trim()) return toast.error('Please enter your access code');
     setLoading(true);
     try {
-      const res = await api.post('/apartments/verify-code', { code });
-      sessionStorage.setItem('verifiedApartment', JSON.stringify(res.data.apartment));
-      toast.success(`Welcome to ${res.data.apartment.name}!`);
-      navigate('/signup');
+      const res = await api.post('/auth/verify-code', { code });
+      sessionStorage.setItem('accessCode', code.trim().toUpperCase());
+      sessionStorage.setItem('accessCodeType', res.data?.type || '');
+      // toast is shown after we route based on type
+      const type = res.data?.type;
+      if (type === 'landlord') {
+        toast.success('Code verified. Create your listing →');
+        navigate('/landlord/create-listing');
+      } else {
+        toast.success('Code verified. Create your profile →');
+        navigate('/signup');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid code');
     } finally {
@@ -30,9 +38,9 @@ export default function AccessCodePage() {
         <div className="auth-logo">
           <div style={{ fontSize: 36 }}>🏠</div>
         </div>
-        <h1 className="auth-title">Enter Community Code</h1>
+        <h1 className="auth-title">Enter Access Code</h1>
         <p className="auth-subtitle">
-          Enter the access code provided by your leasing office to join your community.
+          Enter the access code provided after subscription or by your leasing office.
         </p>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
