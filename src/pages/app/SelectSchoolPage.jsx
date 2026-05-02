@@ -71,6 +71,9 @@ export default function SelectSchoolPage() {
   const [loadingSchools, setLoadingSchools] = useState(false);
   const [schoolId, setSchoolId] = useState('');
   const [campusPreference, setCampusPreference] = useState('');
+  const [showSchoolRequest, setShowSchoolRequest] = useState(false);
+  const [schoolRequestName, setSchoolRequestName] = useState('');
+  const [schoolRequestSending, setSchoolRequestSending] = useState(false);
 
   useEffect(() => {
     if (user?.school) navigate('/browse', { replace: true });
@@ -97,6 +100,26 @@ export default function SelectSchoolPage() {
     if (!q) return schools;
     return schools.filter((s) => String(s.name || '').toLowerCase().includes(q)).slice(0, 12);
   }, [schools, schoolSearch]);
+
+  const submitSchoolRequest = async (e) => {
+    e?.preventDefault?.();
+    const name = schoolRequestName.trim();
+    if (!name) return toast.error('Please enter your school name');
+    setSchoolRequestSending(true);
+    try {
+      await api.post('/schools/request', {
+        schoolName: name,
+        userEmail: user?.email ? String(user.email).trim() : '',
+      });
+      toast.success("Thanks! We'll add your school soon.");
+      setSchoolRequestName('');
+      setShowSchoolRequest(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setSchoolRequestSending(false);
+    }
+  };
 
   const submit = async () => {
     if (!selectedState) return toast.error('Please select a state');
@@ -154,6 +177,45 @@ export default function SelectSchoolPage() {
                 ) : (
                   <div style={{ padding: 12, color: 'var(--grey-2)' }}>
                     {selectedState ? 'No schools found' : 'Select a state to see schools'}
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: 12 }}>
+                {!showSchoolRequest ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '6px 12px', fontSize: 12 }}
+                    onClick={() => setShowSchoolRequest(true)}
+                  >
+                    Don&apos;t see your school? Let us know
+                  </button>
+                ) : (
+                  <div className="card" style={{ padding: 12, marginTop: 8 }}>
+                    <div className="form-label" style={{ marginBottom: 8 }}>
+                      Request a school
+                    </div>
+                    <input
+                      className="form-input"
+                      placeholder="School name"
+                      value={schoolRequestName}
+                      onChange={(e) => setSchoolRequestName(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button type="button" className="btn btn-primary btn-sm" disabled={schoolRequestSending} onClick={submitSchoolRequest}>
+                        {schoolRequestSending ? 'Sending…' : 'Submit'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                          setShowSchoolRequest(false);
+                          setSchoolRequestName('');
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

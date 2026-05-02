@@ -31,6 +31,11 @@ export default function ProfileCard({ user, onRequestMeetUp, onClick }) {
           <IntentBadge intent={user.intent} />
         </div>
       )}
+      {user.yearInSchool ? (
+        <div style={{ marginBottom: 10 }}>
+          <TagPill label={user.yearInSchool} />
+        </div>
+      ) : null}
       <div className="profile-meta-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {firstPhoto ? (

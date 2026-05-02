@@ -22,6 +22,8 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminMeetUps from './pages/admin/AdminMeetUps';
 import AdminSchools from './pages/admin/AdminSchools';
 import AdminListings from './pages/admin/AdminListings';
+import AdminSchoolRequests from './pages/admin/AdminSchoolRequests';
+import SubscriptionPage from './pages/SubscriptionPage';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -51,6 +53,7 @@ export default function App() {
             <Route path="/" element={<AccessCodePage />} />
             <Route path="/access-code" element={<AccessCodePage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/landlord/create-listing" element={<LandlordCreateListingPage />} />
 
@@ -132,6 +135,14 @@ export default function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminSchools />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/school-requests"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminSchoolRequests />
               </ProtectedRoute>
             }
           />

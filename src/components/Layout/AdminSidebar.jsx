@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FiGrid, FiHome, FiUsers, FiCalendar, FiLogOut, FiKey, FiBookOpen, FiClipboard } from 'react-icons/fi';
+import { FiGrid, FiHome, FiUsers, FiCalendar, FiLogOut, FiKey, FiBookOpen, FiClipboard, FiMail } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminSidebar() {
@@ -55,6 +55,12 @@ export default function AdminSidebar() {
             <FiBookOpen />
           </span>
           Schools
+        </NavLink>
+        <NavLink to="/admin/school-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <span className="nav-icon">
+            <FiMail />
+          </span>
+          School Requests
         </NavLink>
         <NavLink to="/admin/listings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">

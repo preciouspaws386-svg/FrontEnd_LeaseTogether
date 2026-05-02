@@ -84,6 +84,8 @@ const RELIGION_OPTIONS = [
 ];
 const TRANSPORTATION_OPTIONS = ['Car', 'Bike', 'Uber/Rideshare', 'Walk', 'Public Transit'];
 
+const YEAR_IN_SCHOOL_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate', 'Other'];
+
 const LIFESTYLE_VIBE_FIELDS = [
   {
     title: 'How often do you party?',
@@ -206,6 +208,7 @@ const INITIAL = {
 
   // Profile setup
   photos: [],
+  yearInSchool: '',
   age: '',
   major: '',
   bio: '',
@@ -303,6 +306,9 @@ export default function SignUpPageNew() {
   const [statesLoading, setStatesLoading] = useState(false);
   const [schools, setSchools] = useState([]);
   const [schoolSearch, setSchoolSearch] = useState('');
+  const [showSchoolRequest, setShowSchoolRequest] = useState(false);
+  const [schoolRequestName, setSchoolRequestName] = useState('');
+  const [schoolRequestSending, setSchoolRequestSending] = useState(false);
 
   useEffect(() => {
     if (!accessCode) {
@@ -326,6 +332,24 @@ export default function SignUpPageNew() {
     };
     loadSchools();
   }, [form.selectedState]);
+
+  const submitSchoolRequest = async (e) => {
+    e?.preventDefault?.();
+    const name = schoolRequestName.trim();
+    if (!name) return toast.error('Please enter your school name');
+    const email = String(form.email || '').trim();
+    setSchoolRequestSending(true);
+    try {
+      await api.post('/schools/request', { schoolName: name, userEmail: email });
+      toast.success("Thanks! We'll add your school soon.");
+      setSchoolRequestName('');
+      setShowSchoolRequest(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Something went wrong');
+    } finally {
+      setSchoolRequestSending(false);
+    }
+  };
 
   const toggleArrayValue = (arr, v) => {
     const set = new Set(arr || []);
@@ -410,6 +434,7 @@ export default function SignUpPageNew() {
         campusPreference: form.campusPreference,
 
         age: form.age ? Number(form.age) : undefined,
+        yearInSchool: form.yearInSchool || undefined,
         major: form.major || '',
         bio: form.bio || '',
         photos: Array.isArray(form.photos) ? form.photos.filter(Boolean).slice(0, 5) : [],
@@ -519,11 +544,14 @@ export default function SignUpPageNew() {
                 <input
                   className={`form-input ${isInvalid('email') ? 'input-invalid' : touched.email && !errors.email ? 'input-valid' : ''}`}
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="yourname@school.edu"
                   value={form.email}
                   onChange={(e) => set('email', e.target.value)}
                   onBlur={() => touch('email')}
                 />
+                <div style={{ fontSize: 12, color: 'var(--grey-2)', marginTop: 6 }}>
+                  Using your college email helps verify your profile faster. Not required.
+                </div>
                 {isInvalid('email') && <div className="field-error">{errors.email}</div>}
               </div>
 
@@ -617,6 +645,38 @@ export default function SignUpPageNew() {
                 )}
               </div>
               {isInvalid('schoolId') && <div className="field-error">{errors.schoolId}</div>}
+              <div style={{ marginTop: 12 }}>
+                {!showSchoolRequest ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ padding: '6px 12px', fontSize: 12 }}
+                    onClick={() => setShowSchoolRequest(true)}
+                  >
+                    Don&apos;t see your school? Let us know
+                  </button>
+                ) : (
+                  <div className="card" style={{ padding: 12, marginTop: 8 }}>
+                    <div className="form-label" style={{ marginBottom: 8 }}>
+                      Request a school
+                    </div>
+                    <input
+                      className="form-input"
+                      placeholder="School name"
+                      value={schoolRequestName}
+                      onChange={(e) => setSchoolRequestName(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                      <button type="button" className="btn btn-primary btn-sm" disabled={schoolRequestSending} onClick={submitSchoolRequest}>
+                        {schoolRequestSending ? 'Sending…' : 'Submit'}
+                      </button>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowSchoolRequest(false); setSchoolRequestName(''); }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-group">
@@ -670,6 +730,17 @@ export default function SignUpPageNew() {
               <div className="form-group full">
                 <label className="form-label">Short bio (optional)</label>
                 <input className="form-input" value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="Tell people a little about yourself" />
+              </div>
+              <div className="form-group full">
+                <label className="form-label">Year in School (optional)</label>
+                <select className="form-select" value={form.yearInSchool} onChange={(e) => set('yearInSchool', e.target.value)}>
+                  <option value="">Select year</option>
+                  {YEAR_IN_SCHOOL_OPTIONS.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

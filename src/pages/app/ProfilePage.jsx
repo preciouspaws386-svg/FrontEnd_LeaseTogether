@@ -34,6 +34,8 @@ const RELIGION_OPTIONS = [
 ];
 const TRANSPORTATION_OPTIONS = ['Car', 'Bike', 'Uber/Rideshare', 'Walk', 'Public Transit'];
 
+const YEAR_IN_SCHOOL_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate', 'Other'];
+
 export default function ProfilePage() {
   const { user, updateStatus, updateProfile, updatePhotos } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
@@ -102,6 +104,7 @@ export default function ProfilePage() {
         other: '',
       },
       hobbies: user.hobbies || '',
+      yearInSchool: user.yearInSchool || '',
     });
     setEditOpen(true);
   };
@@ -221,6 +224,7 @@ export default function ProfilePage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
               {[
                 ['Age', user.age],
+                ['Year', user.yearInSchool],
                 ['Major', user.major],
                 ['Move-in', user.moveInTimeframe],
                 ['Social vibe', user?.personalityVibe?.socialVibe?.[0]],
@@ -284,6 +288,17 @@ export default function ProfilePage() {
           <div className="form-group">
             <label className="form-label">Age</label>
             <input className="form-input" type="number" min="18" value={form.age || ''} onChange={(e) => set('age', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Year in School (optional)</label>
+            <select className="form-select" value={form.yearInSchool || ''} onChange={(e) => set('yearInSchool', e.target.value)}>
+              <option value="">—</option>
+              {YEAR_IN_SCHOOL_OPTIONS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label className="form-label">Major (optional)</label>
