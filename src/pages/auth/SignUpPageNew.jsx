@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { FiCheck, FiImage } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import { compressImage } from '../../utils/compressImage';
+import '../../styles/authForestTheme.css';
 
 const US_STATES = [
   'AL',
@@ -66,9 +68,45 @@ const INTENTS = [
   { code: 'SM', label: 'Social / Meet Up', emoji: '🎉' },
 ];
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function intentRowLabel(code, defaultLabel) {
+  if (code === 'LT') return 'Lease Available';
+  return defaultLabel;
+}
 
-const MONTHLY_BUDGETS = ['$500–$800', '$800–$1200', '$1200+'];
+const MONTHLY_BUDGET_ROWS = [
+  { value: '$500–$800', label: '$500 – $800' },
+  { value: '$800–$1200', label: '$800 – $1200' },
+  { value: '$1200+', label: '$1200+' },
+];
+
+const MOVE_IN_OPTIONS = [
+  { value: 'ASAP', label: 'ASAP' },
+  { value: 'Within 1 month', label: 'Within 1 month' },
+  { value: '1-3 months', label: '1–3 months' },
+  { value: 'Just browsing', label: 'Exploring options' },
+];
+
+const STEP_LABELS = [
+  'Account Info',
+  'Select State / University',
+  'About You',
+  'Lifestyle Vibes & Living Together',
+  'Personality & Guests',
+];
+
+function ForestWatermark() {
+  return (
+    <svg className="auth-forest-watermark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"
+      />
+      <path fill="currentColor" d="M10 9h4v4h-4V9zm1 1v2h2v-2h-2z" opacity="0.9" />
+    </svg>
+  );
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ROOMMATE_PREFERENCES = ['No preference', 'Male', 'Female'];
 const RELIGION_OPTIONS = [
   'No preference',
@@ -274,7 +312,7 @@ const INITIAL = {
 function MultiSelectSection({ title, sectionKey, fieldKey, options, form, toggle }) {
   const values = form?.[sectionKey]?.[fieldKey] || [];
   return (
-    <div className="form-group">
+    <div className="form-group auth-forest-section">
       <div className="form-label" style={{ marginBottom: 10 }}>
         {title}
       </div>
@@ -296,6 +334,7 @@ export default function SignUpPageNew() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const submittingRef = useRef(false);
+  const photoInputRef = useRef(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL);
   const [loading, setLoading] = useState(false);
@@ -481,8 +520,9 @@ export default function SignUpPageNew() {
   const TOTAL_STEPS = 5;
 
   const RADIO_OPT = ({ value, emoji }) => (
-    <div
-      className={`opt ${form.campusPreference === value ? 'on' : ''}`}
+    <button
+      type="button"
+      className={`auth-forest-pill ${form.campusPreference === value ? 'auth-forest-pill--on' : ''}`}
       onClick={() => {
         set('campusPreference', value);
         touch('campusPreference');
@@ -490,250 +530,297 @@ export default function SignUpPageNew() {
     >
       {emoji ? <span style={{ marginRight: 6 }}>{emoji}</span> : null}
       {value}
-    </div>
+    </button>
   );
 
+  const onFooterPrimary = () => {
+    if (step === 1) {
+      touchMany(['firstName', 'lastInitial', 'email', 'password']);
+      if (!errors.firstName && !errors.lastInitial && !errors.email && !errors.password) setStep(2);
+      return;
+    }
+    if (step === 2) {
+      touchMany(['selectedState', 'schoolId', 'campusPreference']);
+      if (!errors.selectedState && !errors.schoolId && !errors.campusPreference) setStep(3);
+      return;
+    }
+    if (step === 3) {
+      setStep(4);
+      return;
+    }
+    if (step === 4) {
+      setStep(5);
+      return;
+    }
+    handleSubmit();
+  };
+
+  const onFooterBack = () => setStep((s) => Math.max(1, s - 1));
+
+  const footerPrimaryLabel =
+    step === 5 ? (loading ? 'Creating...' : 'Create My Profile →') : 'Continue →';
+
+  const ageNumVal = Number(String(form.age || '').trim());
+  const ageShowsCheck = Number.isFinite(ageNumVal) && ageNumVal >= 18;
+
   return (
-    <div className="auth-page" style={{ alignItems: 'flex-start', paddingTop: 40, paddingBottom: 40 }}>
-      <div className="auth-card animate" style={{ maxWidth: 720 }}>
-        <div className="auth-logo">
-          <div style={{ fontSize: 28 }}>🏠</div>
-        </div>
-        <h1 className="auth-title">Create Your Profile</h1>
+    <div className="auth-forest-page">
+      <ForestWatermark />
+      <div className="auth-forest-scroll">
+        <div className="auth-forest-inner">
+          <div className="auth-forest-progress">
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <div key={i} className={`auth-forest-progress-seg ${i < step ? 'auth-forest-progress-seg--fill' : ''}`} />
+            ))}
+          </div>
+          <p className="auth-forest-step-label">
+            Step {step} of {TOTAL_STEPS} — {STEP_LABELS[step - 1]}
+          </p>
+          <h1 className="auth-forest-title">Create Your Profile</h1>
 
-        <div className="step-track">
-          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <div key={i} className={`step-seg ${step > i + 1 ? 'done' : step === i + 1 ? 'active' : ''}`} />
-          ))}
-        </div>
-
-        {step === 1 && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>Step 1 of 5 — Account Info</p>
-
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">First Name *</label>
-                <input
-                  className={`form-input ${isInvalid('firstName') ? 'input-invalid' : touched.firstName && !errors.firstName ? 'input-valid' : ''}`}
-                  type="text"
-                  placeholder="Taylor"
-                  value={form.firstName}
-                  onChange={(e) => set('firstName', e.target.value)}
-                  onBlur={() => touch('firstName')}
-                />
-                {isInvalid('firstName') && <div className="field-error">{errors.firstName}</div>}
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Last Initial *</label>
-                <input
-                  className={`form-input ${isInvalid('lastInitial') ? 'input-invalid' : touched.lastInitial && !errors.lastInitial ? 'input-valid' : ''}`}
-                  type="text"
-                  placeholder="R"
-                  maxLength={1}
-                  value={form.lastInitial}
-                  onChange={(e) => set('lastInitial', e.target.value.toUpperCase())}
-                  onBlur={() => touch('lastInitial')}
-                />
-                {isInvalid('lastInitial') && <div className="field-error">{errors.lastInitial}</div>}
-              </div>
-
-              <div className="form-group full">
-                <label className="form-label">Email Address *</label>
-                <input
-                  className={`form-input ${isInvalid('email') ? 'input-invalid' : touched.email && !errors.email ? 'input-valid' : ''}`}
-                  type="email"
-                  placeholder="yourname@school.edu"
-                  value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
-                  onBlur={() => touch('email')}
-                />
-                <div style={{ fontSize: 12, color: 'var(--grey-2)', marginTop: 6 }}>
-                  Using your college email helps verify your profile faster. Not required.
+          {step === 1 && (
+            <div>
+              <div className="form-grid">
+                <div className="form-group auth-forest-section">
+                  <label className="form-label">First Name *</label>
+                  <input
+                    className={`auth-forest-input ${isInvalid('firstName') ? 'input-invalid' : ''}`}
+                    type="text"
+                    placeholder="Taylor"
+                    value={form.firstName}
+                    onChange={(e) => set('firstName', e.target.value)}
+                    onBlur={() => touch('firstName')}
+                  />
+                  {isInvalid('firstName') && <div className="auth-forest-field-error">{errors.firstName}</div>}
                 </div>
-                {isInvalid('email') && <div className="field-error">{errors.email}</div>}
+
+                <div className="form-group auth-forest-section">
+                  <label className="form-label">Last Initial *</label>
+                  <input
+                    className={`auth-forest-input ${isInvalid('lastInitial') ? 'input-invalid' : ''}`}
+                    type="text"
+                    placeholder="R"
+                    maxLength={1}
+                    value={form.lastInitial}
+                    onChange={(e) => set('lastInitial', e.target.value.toUpperCase())}
+                    onBlur={() => touch('lastInitial')}
+                  />
+                  {isInvalid('lastInitial') && <div className="auth-forest-field-error">{errors.lastInitial}</div>}
+                </div>
+
+                <div className="form-group full auth-forest-section">
+                  <label className="form-label">Email Address *</label>
+                  <input
+                    className={`auth-forest-input ${isInvalid('email') ? 'input-invalid' : ''}`}
+                    type="email"
+                    placeholder="yourname@school.edu"
+                    value={form.email}
+                    onChange={(e) => set('email', e.target.value)}
+                    onBlur={() => touch('email')}
+                  />
+                  <div className="auth-forest-helper">
+                    Using your college email helps verify your profile faster. Not required.
+                  </div>
+                  {isInvalid('email') && <div className="auth-forest-field-error">{errors.email}</div>}
+                </div>
+
+                <div className="form-group full auth-forest-section">
+                  <label className="form-label">Password *</label>
+                  <input
+                    className={`auth-forest-input ${isInvalid('password') ? 'input-invalid' : ''}`}
+                    type="password"
+                    placeholder="At least 6 characters"
+                    value={form.password}
+                    onChange={(e) => set('password', e.target.value)}
+                    onBlur={() => touch('password')}
+                  />
+                  {isInvalid('password') && <div className="auth-forest-field-error">{errors.password}</div>}
+                </div>
               </div>
 
-              <div className="form-group full">
-                <label className="form-label">Password *</label>
+              <p style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: '#cccccc' }}>
+                Already have an account?{' '}
+                <Link to="/login" className="auth-forest-link">
+                  Sign In
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Step 1 — Select State *</label>
+                <select
+                  className={`auth-forest-select ${isInvalid('selectedState') ? 'input-invalid' : ''}`}
+                  value={form.selectedState}
+                  onChange={(e) => {
+                    setForm((f) => ({
+                      ...f,
+                      selectedState: e.target.value,
+                      schoolId: '',
+                    }));
+                    setTouched((t) => ({ ...t, selectedState: true }));
+                  }}
+                >
+                  <option value="">Select a state</option>
+                  {US_STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                {isInvalid('selectedState') && <div className="auth-forest-field-error">{errors.selectedState}</div>}
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Step 2 — Select University/School *</label>
                 <input
-                  className={`form-input ${isInvalid('password') ? 'input-invalid' : touched.password && !errors.password ? 'input-valid' : ''}`}
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={form.password}
-                  onChange={(e) => set('password', e.target.value)}
-                  onBlur={() => touch('password')}
+                  className="auth-forest-input"
+                  placeholder="Search your school..."
+                  value={schoolSearch}
+                  onChange={(e) => setSchoolSearch(e.target.value)}
                 />
-                {isInvalid('password') && <div className="field-error">{errors.password}</div>}
-              </div>
-            </div>
 
-            <button
-              className="btn btn-primary btn-full"
-              onClick={() => {
-                touchMany(['firstName', 'lastInitial', 'email', 'password']);
-                if (!errors.firstName && !errors.lastInitial && !errors.email && !errors.password) setStep(2);
-              }}
-            >
-              Continue →
-            </button>
-
-            <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--grey-2)' }}>
-              Already have an account?{' '}
-              <Link to="/login" style={{ color: 'var(--accent)' }}>
-                Sign In
-              </Link>
-            </p>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>
-              Step 2 of 5 — Select State / University
-            </p>
-
-            <div className="form-group">
-              <label className="form-label">Step 1 — Select State *</label>
-              <select
-                className={`form-select ${isInvalid('selectedState') ? 'input-invalid' : ''}`}
-                value={form.selectedState}
-                onChange={(e) => {
-                  setForm((f) => ({
-                    ...f,
-                    selectedState: e.target.value,
-                    schoolId: '',
-                  }));
-                  setTouched((t) => ({ ...t, selectedState: true }));
-                }}
-              >
-                <option value="">Select a state</option>
-                {US_STATES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              {isInvalid('selectedState') && <div className="field-error">{errors.selectedState}</div>}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Step 2 — Select University/School *</label>
-              <input className="form-input" placeholder="Search your school..." value={schoolSearch} onChange={(e) => setSchoolSearch(e.target.value)} />
-
-              <div className="opts" style={{ maxHeight: 220, overflowY: 'auto', marginTop: 12 }}>
-                {statesLoading ? (
-                  <div style={{ padding: 12, color: 'var(--grey-2)' }}>Loading schools...</div>
-                ) : filteredSchools.length ? (
-                  filteredSchools.map((s) => (
-                    <div
-                      key={s._id}
-                      className={`opt ${form.schoolId === s._id ? 'on' : ''}`}
-                      onClick={() => {
-                        setForm((f) => ({ ...f, schoolId: s._id }));
-                        touch('schoolId');
-                      }}
-                    >
-                      🎓 {s.name}
+                <div className="opts" style={{ maxHeight: 220, overflowY: 'auto', marginTop: 12 }}>
+                  {statesLoading ? (
+                    <div style={{ padding: 12, color: '#999999' }}>Loading schools...</div>
+                  ) : filteredSchools.length ? (
+                    filteredSchools.map((s) => (
+                      <div
+                        key={s._id}
+                        className={`opt ${form.schoolId === s._id ? 'on' : ''}`}
+                        onClick={() => {
+                          setForm((f) => ({ ...f, schoolId: s._id }));
+                          touch('schoolId');
+                        }}
+                      >
+                        🎓 {s.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: 12, color: '#999999' }}>
+                      {form.selectedState ? 'No schools found for this state.' : 'Select a state to see schools.'}
                     </div>
-                  ))
-                ) : (
-                  <div style={{ padding: 12, color: 'var(--grey-2)' }}>
-                    {form.selectedState ? 'No schools found for this state.' : 'Select a state to see schools.'}
-                  </div>
-                )}
+                  )}
+                </div>
+                {isInvalid('schoolId') && <div className="auth-forest-field-error">{errors.schoolId}</div>}
+                <div style={{ marginTop: 12 }}>
+                  {!showSchoolRequest ? (
+                    <button type="button" className="auth-forest-btn-back" style={{ width: 'auto', height: 'auto', padding: '8px 14px' }} onClick={() => setShowSchoolRequest(true)}>
+                      Don&apos;t see your school? Let us know
+                    </button>
+                  ) : (
+                    <div className="auth-forest-school-panel">
+                      <div className="form-label" style={{ marginBottom: 8 }}>
+                        Request a school
+                      </div>
+                      <input
+                        className="auth-forest-input"
+                        placeholder="School name"
+                        value={schoolRequestName}
+                        onChange={(e) => setSchoolRequestName(e.target.value)}
+                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                        <button type="button" className="auth-forest-btn-primary" style={{ flex: 1, height: 44 }} disabled={schoolRequestSending} onClick={submitSchoolRequest}>
+                          {schoolRequestSending ? 'Sending…' : 'Submit'}
+                        </button>
+                        <button
+                          type="button"
+                          className="auth-forest-btn-back"
+                          style={{ flex: 1, height: 44 }}
+                          onClick={() => {
+                            setShowSchoolRequest(false);
+                            setSchoolRequestName('');
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              {isInvalid('schoolId') && <div className="field-error">{errors.schoolId}</div>}
-              <div style={{ marginTop: 12 }}>
-                {!showSchoolRequest ? (
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    style={{ padding: '6px 12px', fontSize: 12 }}
-                    onClick={() => setShowSchoolRequest(true)}
-                  >
-                    Don&apos;t see your school? Let us know
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Step 3 — Campus Preference *</label>
+                <div className="auth-forest-pill-row">
+                  <RADIO_OPT value="On Campus" emoji="🏫" />
+                  <RADIO_OPT value="Off Campus" emoji="🏢" />
+                  <RADIO_OPT value="No Preference" emoji="🤷" />
+                </div>
+                {isInvalid('campusPreference') && <div className="auth-forest-field-error">{errors.campusPreference}</div>}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={(e) => onPhotosSelected(e.target.files)}
+              />
+
+              <div className="form-group auth-forest-section">
+                <label className="auth-forest-label auth-forest-label--medium">Profile photos (optional)</label>
+                <div className="auth-forest-file-row">
+                  <FiImage className="auth-forest-file-icon" size={20} color="#888888" aria-hidden />
+                  <button type="button" className="auth-forest-file-btn" onClick={() => photoInputRef.current?.click()}>
+                    Choose Files
                   </button>
-                ) : (
-                  <div className="card" style={{ padding: 12, marginTop: 8 }}>
-                    <div className="form-label" style={{ marginBottom: 8 }}>
-                      Request a school
-                    </div>
+                  <span className="auth-forest-file-hint">
+                    {form.photos?.length ? `${form.photos.length} photo(s) selected` : 'no files selected'}
+                  </span>
+                </div>
+                <div className="auth-forest-helper">Add 1–5 photos (optional).</div>
+              </div>
+
+              <div className="auth-forest-two-col auth-forest-section">
+                <div className="form-group">
+                  <label className="form-label">Age (18+) *</label>
+                  <div className="auth-forest-input-wrap">
                     <input
-                      className="form-input"
-                      placeholder="School name"
-                      value={schoolRequestName}
-                      onChange={(e) => setSchoolRequestName(e.target.value)}
+                      className={`auth-forest-input ${isInvalid('age') ? 'input-invalid' : ''}`}
+                      type="number"
+                      min="18"
+                      value={form.age}
+                      onChange={(e) => set('age', e.target.value)}
+                      onBlur={() => touch('age')}
                     />
-                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                      <button type="button" className="btn btn-primary btn-sm" disabled={schoolRequestSending} onClick={submitSchoolRequest}>
-                        {schoolRequestSending ? 'Sending…' : 'Submit'}
-                      </button>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setShowSchoolRequest(false); setSchoolRequestName(''); }}>
-                        Cancel
-                      </button>
-                    </div>
+                    {ageShowsCheck ? (
+                      <FiCheck className="auth-forest-check-age" strokeWidth={2.5} color="#22c55e" aria-hidden />
+                    ) : null}
                   </div>
-                )}
+                  {isInvalid('age') && <div className="auth-forest-field-error">{errors.age}</div>}
+                </div>
+                <div className="form-group">
+                  <label className="form-label">What are you studying? (optional)</label>
+                  <input
+                    className="auth-forest-input"
+                    value={form.major}
+                    onChange={(e) => set('major', e.target.value)}
+                    placeholder="e.g. Nursing, Business"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label className="form-label">Step 3 — Campus Preference *</label>
-              <div className="opts">
-                <RADIO_OPT value="On Campus" emoji="🏫" />
-                <RADIO_OPT value="Off Campus" emoji="🏢" />
-                <RADIO_OPT value="No Preference" emoji="🤷" />
-              </div>
-              {isInvalid('campusPreference') && <div className="field-error">{errors.campusPreference}</div>}
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" type="button" onClick={() => setStep(1)}>
-                ← Back
-              </button>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1 }}
-                type="button"
-                onClick={() => {
-                  touchMany(['selectedState', 'schoolId', 'campusPreference']);
-                  if (!errors.selectedState && !errors.schoolId && !errors.campusPreference) setStep(3);
-                }}
-              >
-                Continue →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>Step 3 of 5 — Profile Setup</p>
-
-            <div className="form-group">
-              <label className="form-label">Profile photos (optional)</label>
-              <input className="form-input" type="file" accept="image/*" multiple onChange={(e) => onPhotosSelected(e.target.files)} />
-            </div>
-
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Age (18+) *</label>
-                <input className={`form-input ${isInvalid('age') ? 'input-invalid' : ''}`} type="number" min="18" value={form.age} onChange={(e) => set('age', e.target.value)} onBlur={() => touch('age')} />
-                {isInvalid('age') && <div className="field-error">{errors.age}</div>}
-              </div>
-              <div className="form-group">
-                <label className="form-label">What are you studying? (optional)</label>
-                <input className="form-input" value={form.major} onChange={(e) => set('major', e.target.value)} placeholder="e.g. Nursing, Business" />
-              </div>
-              <div className="form-group full">
+              <div className="form-group auth-forest-section">
                 <label className="form-label">Short bio (optional)</label>
-                <input className="form-input" value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="Tell people a little about yourself" />
+                <textarea
+                  className="auth-forest-textarea"
+                  value={form.bio}
+                  onChange={(e) => set('bio', e.target.value)}
+                  placeholder="Tell people a little about yourself"
+                />
               </div>
-              <div className="form-group full">
+
+              <div className="form-group auth-forest-section">
                 <label className="form-label">Year in School (optional)</label>
-                <select className="form-select" value={form.yearInSchool} onChange={(e) => set('yearInSchool', e.target.value)}>
+                <select className="auth-forest-select" value={form.yearInSchool} onChange={(e) => set('yearInSchool', e.target.value)}>
                   <option value="">Select year</option>
                   {YEAR_IN_SCHOOL_OPTIONS.map((y) => (
                     <option key={y} value={y}>
@@ -742,218 +829,238 @@ export default function SignUpPageNew() {
                   ))}
                 </select>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label className="form-label">Move-in timeframe</label>
-              <div className="opts">
-                {['ASAP', 'Within 1 month', '1-3 months', 'Just browsing'].map((v) => (
-                  <div key={v} className={`opt ${form.moveInTimeframe === v ? 'on' : ''}`} onClick={() => set('moveInTimeframe', v)}>
-                    {v}
-                  </div>
-                ))}
-              </div>
-            </div>
+              <button type="button" className="auth-forest-skip" onClick={() => setStep(4)}>
+                Skip for now
+              </button>
 
-            <div className="form-group">
-              <label className="form-label">What are you here for? *</label>
-              <div className="opts">
+              <div className="form-group auth-forest-section">
+                <label className="form-label">What are you here for? *</label>
                 {INTENTS.map((it) => (
                   <div
                     key={it.code}
-                    className={`opt ${form.intent === it.code ? 'on' : ''}`}
+                    role="button"
+                    tabIndex={0}
+                    className={`auth-forest-intent-row ${form.intent === it.code ? 'auth-forest-intent-row--on' : ''}`}
                     onClick={() => {
                       set('intent', it.code);
                       touch('intent');
                     }}
-                  >
-                    <span style={{ marginRight: 6 }}>{it.emoji}</span>
-                    {it.label}
-                  </div>
-                ))}
-              </div>
-              {isInvalid('intent') && <div className="field-error">{errors.intent}</div>}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Monthly Budget *</label>
-              <div className="opts">
-                {MONTHLY_BUDGETS.map((b) => (
-                  <div
-                    key={b}
-                    className={`opt ${form.monthlyBudget === b ? 'on' : ''}`}
-                    onClick={() => {
-                      set('monthlyBudget', b);
-                      touch('monthlyBudget');
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        set('intent', it.code);
+                        touch('intent');
+                      }
                     }}
                   >
-                    {b}
+                    <div className="auth-forest-intent-left">
+                      <span aria-hidden>{it.emoji}</span>
+                      <span>{intentRowLabel(it.code, it.label)}</span>
+                    </div>
+                    <div className={`auth-forest-check-box ${form.intent === it.code ? 'auth-forest-check-box--on' : ''}`}>
+                      {form.intent === it.code ? '✓' : null}
+                    </div>
                   </div>
                 ))}
+                {isInvalid('intent') && <div className="auth-forest-field-error">{errors.intent}</div>}
               </div>
-              {isInvalid('monthlyBudget') && <div className="field-error">{errors.monthlyBudget}</div>}
-            </div>
 
-            <div className="form-group">
-              <label className="form-label">Roommate preference (optional)</label>
-              <div className="opts">
-                {ROOMMATE_PREFERENCES.map((v) => (
-                  <div key={v} className={`opt ${form.roommatePreference === v ? 'on' : ''}`} onClick={() => set('roommatePreference', v)}>
-                    {v}
-                  </div>
-                ))}
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Monthly budget (optional)</label>
+                <div className="auth-forest-pill-row">
+                  {MONTHLY_BUDGET_ROWS.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`auth-forest-pill ${form.monthlyBudget === value ? 'auth-forest-pill--on' : ''}`}
+                      onClick={() => {
+                        set('monthlyBudget', value);
+                        touch('monthlyBudget');
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {isInvalid('monthlyBudget') && <div className="auth-forest-field-error">{errors.monthlyBudget}</div>}
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Move-in timeframe</label>
+                <div className="auth-forest-move-grid">
+                  {MOVE_IN_OPTIONS.map(({ value, label }) => {
+                    const on = form.moveInTimeframe === value;
+                    const pillClass =
+                      on && value === 'ASAP'
+                        ? 'auth-forest-pill auth-forest-pill--asap-on'
+                        : on
+                          ? 'auth-forest-pill auth-forest-pill--on'
+                          : 'auth-forest-pill';
+                    return (
+                      <button key={value} type="button" className={pillClass} onClick={() => set('moveInTimeframe', value)}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Roommate preference (optional)</label>
+                <div className="auth-forest-pill-row">
+                  {ROOMMATE_PREFERENCES.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      className={`auth-forest-pill ${form.roommatePreference === v ? 'auth-forest-pill--on' : ''}`}
+                      onClick={() => set('roommatePreference', v)}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">🌈 LGBTQ+ friendly (optional)</label>
+                <label className="toggle" style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                  <input type="checkbox" checked={!!form.lgbtqFriendly} onChange={(e) => set('lgbtqFriendly', e.target.checked)} />
+                  <span className="toggle-slider" />
+                </label>
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Religion (optional)</label>
+                <select className="auth-forest-select" value={form.religion} onChange={(e) => set('religion', e.target.value)}>
+                  {RELIGION_OPTIONS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Transportation (optional)</label>
+                <div className="opts">
+                  {TRANSPORTATION_OPTIONS.map((opt) => (
+                    <div
+                      key={opt}
+                      className={`opt ${form.transportation.includes(opt) ? 'on' : ''}`}
+                      onClick={() => toggleTransportation(opt)}
+                    >
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">Social media (optional)</label>
+                <div className="form-grid">
+                  {[
+                    ['instagram', 'Instagram'],
+                    ['snapchat', 'Snapchat'],
+                    ['tiktok', 'TikTok'],
+                    ['facebook', 'Facebook'],
+                    ['other', 'Other'],
+                  ].map(([key, label]) => (
+                    <div key={key} className="form-group">
+                      <input
+                        className="auth-forest-input"
+                        value={form.socialMedia[key] || ''}
+                        onChange={(e) => setForm((f) => ({ ...f, socialMedia: { ...f.socialMedia, [key]: e.target.value } }))}
+                        placeholder={`${label} handle/link`}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+          )}
 
-            <div className="form-group">
-              <label className="form-label">🌈 LGBTQ+ friendly (optional)</label>
-              <label className="toggle" style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-                <input type="checkbox" checked={!!form.lgbtqFriendly} onChange={(e) => set('lgbtqFriendly', e.target.checked)} />
-                <span className="toggle-slider" />
-              </label>
+          {step === 4 && (
+            <div>
+              {LIFESTYLE_VIBE_FIELDS.map((q) => (
+                <MultiSelectSection
+                  key={q.field}
+                  title={q.title}
+                  sectionKey="lifestyleVibes"
+                  fieldKey={q.field}
+                  options={q.options}
+                  form={form}
+                  toggle={toggleNestedArray}
+                />
+              ))}
+
+              {LIVING_TOGETHER_FIELDS.map((q) => (
+                <MultiSelectSection
+                  key={q.field}
+                  title={q.title}
+                  sectionKey="livingTogether"
+                  fieldKey={q.field}
+                  options={q.options}
+                  form={form}
+                  toggle={toggleNestedArray}
+                />
+              ))}
             </div>
+          )}
 
-            <div className="form-group">
-              <label className="form-label">Religion (optional)</label>
-              <select className="form-select" value={form.religion} onChange={(e) => set('religion', e.target.value)}>
-                {RELIGION_OPTIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {step === 5 && (
+            <div>
+              {PERSONALITY_FIELDS.map((q) => (
+                <MultiSelectSection
+                  key={q.field}
+                  title={q.title}
+                  sectionKey="personalityVibe"
+                  fieldKey={q.field}
+                  options={q.options}
+                  form={form}
+                  toggle={toggleNestedArray}
+                />
+              ))}
 
-            <div className="form-group">
-              <label className="form-label">Transportation (optional)</label>
-              <div className="opts">
-                {TRANSPORTATION_OPTIONS.map((opt) => (
-                  <div
-                    key={opt}
-                    className={`opt ${form.transportation.includes(opt) ? 'on' : ''}`}
-                    onClick={() => toggleTransportation(opt)}
-                  >
-                    {opt}
-                  </div>
-                ))}
+              {GUESTS_FIELDS.map((q) => (
+                <MultiSelectSection
+                  key={q.field}
+                  title={q.title}
+                  sectionKey="guestsAndVisitors"
+                  fieldKey={q.field}
+                  options={q.options}
+                  form={form}
+                  toggle={toggleNestedArray}
+                />
+              ))}
+
+              <div className="form-group auth-forest-section">
+                <label className="form-label">What are you into? (optional)</label>
+                <input
+                  className="auth-forest-input"
+                  placeholder="Gym, Gaming, Sports, Music..."
+                  value={form.hobbies}
+                  onChange={(e) => set('hobbies', e.target.value)}
+                />
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
-            <div className="form-group">
-              <label className="form-label">Social media (optional)</label>
-              <div className="form-grid">
-                {[
-                  ['instagram', 'Instagram'],
-                  ['snapchat', 'Snapchat'],
-                  ['tiktok', 'TikTok'],
-                  ['facebook', 'Facebook'],
-                  ['other', 'Other'],
-                ].map(([key, label]) => (
-                  <div key={key} className="form-group">
-                    <input
-                      className="form-input"
-                      value={form.socialMedia[key] || ''}
-                      onChange={(e) => setForm((f) => ({ ...f, socialMedia: { ...f.socialMedia, [key]: e.target.value } }))}
-                      placeholder={`${label} handle/link`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" type="button" onClick={() => setStep(2)}>
-                ← Back
-              </button>
-              <button className="btn btn-primary" style={{ flex: 1 }} type="button" onClick={() => setStep(4)}>
-                Continue →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>Step 4 of 5 — Lifestyle Vibes & Living Together</p>
-
-            {LIFESTYLE_VIBE_FIELDS.map((q) => (
-              <MultiSelectSection
-                key={q.field}
-                title={q.title}
-                sectionKey="lifestyleVibes"
-                fieldKey={q.field}
-                options={q.options}
-                form={form}
-                toggle={toggleNestedArray}
-              />
-            ))}
-
-            {LIVING_TOGETHER_FIELDS.map((q) => (
-              <MultiSelectSection
-                key={q.field}
-                title={q.title}
-                sectionKey="livingTogether"
-                fieldKey={q.field}
-                options={q.options}
-                form={form}
-                toggle={toggleNestedArray}
-              />
-            ))}
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" type="button" onClick={() => setStep(3)}>
-                ← Back
-              </button>
-              <button className="btn btn-primary" style={{ flex: 1 }} type="button" onClick={() => setStep(5)}>
-                Continue →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--grey-2)', marginBottom: 20, textAlign: 'center' }}>Step 5 of 5 — Personality & Guests</p>
-
-            {PERSONALITY_FIELDS.map((q) => (
-              <MultiSelectSection
-                key={q.field}
-                title={q.title}
-                sectionKey="personalityVibe"
-                fieldKey={q.field}
-                options={q.options}
-                form={form}
-                toggle={toggleNestedArray}
-              />
-            ))}
-
-            {GUESTS_FIELDS.map((q) => (
-              <MultiSelectSection
-                key={q.field}
-                title={q.title}
-                sectionKey="guestsAndVisitors"
-                fieldKey={q.field}
-                options={q.options}
-                form={form}
-                toggle={toggleNestedArray}
-              />
-            ))}
-
-            <div className="form-group">
-              <label className="form-label">What are you into? (optional)</label>
-              <input className="form-input" placeholder="Gym, Gaming, Sports, Music..." value={form.hobbies} onChange={(e) => set('hobbies', e.target.value)} />
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn btn-secondary" type="button" onClick={() => setStep(4)}>
-                ← Back
-              </button>
-              <button className="btn btn-primary" style={{ flex: 1 }} type="button" onClick={handleSubmit} disabled={loading}>
-                {loading ? 'Creating...' : 'Create My Profile →'}
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="auth-forest-footer">
+        <div className="auth-forest-footer-inner">
+          {step > 1 ? (
+            <button type="button" className="auth-forest-btn-back" onClick={onFooterBack}>
+              ← Back
+            </button>
+          ) : (
+            <span style={{ flex: 1 }} aria-hidden />
+          )}
+          <button type="button" className="auth-forest-btn-primary" onClick={onFooterPrimary} disabled={loading}>
+            {footerPrimaryLabel}
+          </button>
+        </div>
       </div>
     </div>
   );
