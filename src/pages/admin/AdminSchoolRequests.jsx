@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 
 export default function AdminSchoolRequests() {
   const [requests, setRequests] = useState([]);
@@ -25,11 +24,7 @@ export default function AdminSchoolRequests() {
   }, []);
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="School Requests" />
-        <div className="page-body">
+    <AdminAppShell title="School Requests">
           <div className="page-subtitle" style={{ marginBottom: 16 }}>
             Users who asked us to add a missing school.
           </div>
@@ -64,8 +59,6 @@ export default function AdminSchoolRequests() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }

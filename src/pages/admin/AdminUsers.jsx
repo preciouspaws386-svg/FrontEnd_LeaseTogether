@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 import StatusBadge from '../../components/UI/StatusBadge';
 
 export default function AdminUsers() {
@@ -52,15 +51,10 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Users" />
-        <div className="page-body">
+    <AdminAppShell title="Users">
           <div style={{ marginBottom: 16 }}>
             <select
-              className="form-select"
-              style={{ width: 320 }}
+              className="form-select admin-toolbar-select"
               value={apartmentId}
               onChange={(e) => {
                 const v = e.target.value;
@@ -132,7 +126,7 @@ export default function AdminUsers() {
                       </td>
                       <td>{u.isDisabled ? 'Yes' : 'No'}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className="admin-table-actions">
                           <button
                             className={`btn btn-xs ${u.isDisabled ? 'btn-secondary' : 'btn-danger-ghost'}`}
                             onClick={() => toggleDisabled(u)}
@@ -150,9 +144,7 @@ export default function AdminUsers() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }
 

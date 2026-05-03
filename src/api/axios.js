@@ -21,8 +21,15 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     const res = error.response;
+    if (res?.status === 403 && res.data?.subscriptionRequired === true) {
+      toast.error(res.data?.message || 'Subscription required to use this feature.');
+      const path = typeof window !== 'undefined' ? window.location.pathname : '';
+      if (path !== '/subscription' && !path.startsWith('/admin')) {
+        window.location.assign('/subscription');
+      }
+    }
     if (res?.status === 403 && res.data?.trialExpired === true) {
-      toast.error('Your 7-day free trial has ended. Subscribe to continue.');
+      toast.error('Your trial has ended. Subscribe to continue.');
       const path = typeof window !== 'undefined' ? window.location.pathname : '';
       if (path !== '/subscription') {
         window.location.assign('/subscription');

@@ -5,7 +5,8 @@ import { NotificationProvider } from './context/NotificationContext';
 
 import AccessCodePage from './pages/auth/AccessCodePage';
 import LoginPage from './pages/auth/LoginPage';
-import SignUpPage from './pages/auth/SignUpPageNew';
+import SignUpPageNew from './pages/auth/SignUpPageNew';
+import InstallPwaPrompt from './components/InstallPwaPrompt';
 
 import BrowsePage from './pages/app/BrowsePage';
 import NotificationsPage from './pages/app/NotificationsPage';
@@ -30,10 +31,13 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   const location = useLocation();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && user.role !== 'admin') return <Navigate to="/browse" replace />;
+  if (!adminOnly && user.role !== 'admin' && !user.subscriptionActive) {
+    return <Navigate to="/subscription" replace />;
+  }
   if (!adminOnly && !user.school && location.pathname !== '/select-school') {
     return <Navigate to="/select-school" replace />;
   }
-  if (adminOnly && user.role !== 'admin') return <Navigate to="/browse" replace />;
   return children;
 };
 
@@ -42,6 +46,7 @@ export default function App() {
     <AuthProvider>
       <NotificationProvider>
         <BrowserRouter>
+          <InstallPwaPrompt />
           <Toaster
             position="top-right"
             toastOptions={{
@@ -54,7 +59,7 @@ export default function App() {
             <Route path="/access-code" element={<AccessCodePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/subscription" element={<SubscriptionPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/signup" element={<SignUpPageNew />} />
             <Route path="/landlord/create-listing" element={<LandlordCreateListingPage />} />
 
           <Route

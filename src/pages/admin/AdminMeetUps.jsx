@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 
 const STATUS = ['Pending', 'Accepted', 'Declined', 'Cancelled', 'Completed'];
 const STATUS_CLASS = {
@@ -46,17 +45,13 @@ export default function AdminMeetUps() {
   };
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Meet-Ups" />
-        <div className="page-body">
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
-            <input className="form-input" style={{ width: 240 }} placeholder="Search by code (RM-XXXX)" value={code} onChange={(e) => setCode(e.target.value)} />
+    <AdminAppShell title="Meet-Ups">
+          <div className="admin-filters-row">
+            <input className="form-input" placeholder="Search by code (RM-XXXX)" value={code} onChange={(e) => setCode(e.target.value)} />
             <button className="btn btn-secondary btn-sm" onClick={load}>
               Search
             </button>
-            <select className="form-select" style={{ width: 200 }} value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">All Statuses</option>
               {STATUS.map((s) => (
                 <option key={s} value={s}>
@@ -116,9 +111,7 @@ export default function AdminMeetUps() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }
 

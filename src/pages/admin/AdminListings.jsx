@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 
 export default function AdminListings() {
   const [listings, setListings] = useState([]);
@@ -47,11 +46,7 @@ export default function AdminListings() {
   };
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Listings" />
-        <div className="page-body">
+    <AdminAppShell title="Listings">
           {loading ? <div style={{ padding: '30px 0', color: 'var(--grey-2)' }}>Loading…</div> : null}
           <div className="table-wrapper">
             <table className="admin-table">
@@ -94,7 +89,7 @@ export default function AdminListings() {
                       </td>
                       <td style={{ fontFamily: 'monospace' }}>{l.contactPhone}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className="admin-table-actions">
                           <button className="btn btn-danger-ghost btn-xs" onClick={() => del(l._id)}>
                             Delete
                           </button>
@@ -106,9 +101,7 @@ export default function AdminListings() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }
 

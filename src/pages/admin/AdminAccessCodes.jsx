@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 
 export default function AdminAccessCodes() {
   const [codes, setCodes] = useState([]);
@@ -76,12 +75,8 @@ export default function AdminAccessCodes() {
   const nowTable = useMemo(() => codes || [], [codes]);
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Access Codes" />
-        <div className="page-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+    <AdminAppShell title="Access Codes">
+          <div className="admin-access-codes-grid">
             <div className="card" style={{ padding: 14 }}>
               <div style={{ fontWeight: 900, marginBottom: 10 }}>Generate Public One-time Codes</div>
               <div className="form-group">
@@ -160,9 +155,7 @@ export default function AdminAccessCodes() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }
 

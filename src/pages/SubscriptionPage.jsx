@@ -9,9 +9,9 @@ export default function SubscriptionPage() {
         <div className="auth-logo">
           <div style={{ fontSize: 36 }}>🏠</div>
         </div>
-        <h1 className="auth-title">Trial ended</h1>
+        <h1 className="auth-title">Subscription required</h1>
         <p className="auth-subtitle" style={{ marginBottom: 16 }}>
-          Your 7-day free trial has ended. Subscribe to continue using Roomiez.
+          An active subscription is required to use LeaseTogether. Subscribe below to request access.
         </p>
         <a
           href={SUBSCRIBE_URL}

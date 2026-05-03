@@ -28,7 +28,13 @@ export default function LoginPage() {
     try {
       const user = await login(form.email, form.password);
       toast.success('Signed in');
-      navigate(user.role === 'admin' ? '/admin' : '/browse');
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (!user.subscriptionActive) {
+        navigate('/subscription');
+      } else {
+        navigate('/browse');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally {
@@ -77,8 +83,8 @@ export default function LoginPage() {
 
         <div style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: '#cccccc' }}>
           No account?{' '}
-          <Link to="/signup" className="auth-forest-link">
-            Sign up
+          <Link to="/access-code" className="auth-forest-link">
+            Enter your access code first
           </Link>
         </div>
       </div>

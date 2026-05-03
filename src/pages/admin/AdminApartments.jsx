@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 import Modal from '../../components/UI/Modal';
 
 const EMPTY = {
@@ -81,15 +80,14 @@ export default function AdminApartments() {
   };
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Apartments">
-          <button className="btn btn-primary btn-sm" onClick={() => { setForm(EMPTY); setAddOpen(true); }}>
-            + Add Apartment
-          </button>
-        </TopBar>
-        <div className="page-body">
+    <AdminAppShell
+      title="Apartments"
+      topRight={
+        <button className="btn btn-primary btn-sm" onClick={() => { setForm(EMPTY); setAddOpen(true); }}>
+          + Add Apartment
+        </button>
+      }
+    >
           <div className="table-wrapper">
             <table className="admin-table">
               <thead>
@@ -120,7 +118,7 @@ export default function AdminApartments() {
                       <td>{a.zipCode}</td>
                       <td style={{ fontFamily: 'monospace', color: 'var(--accent)' }}>{a.accessCode}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className="admin-table-actions">
                           <button
                             className="btn btn-secondary btn-xs"
                             onClick={() => {
@@ -151,8 +149,6 @@ export default function AdminApartments() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
 
       <Modal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Add Apartment">
         {[
@@ -205,7 +201,7 @@ export default function AdminApartments() {
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </Modal>
-    </div>
+    </AdminAppShell>
   );
 }
 

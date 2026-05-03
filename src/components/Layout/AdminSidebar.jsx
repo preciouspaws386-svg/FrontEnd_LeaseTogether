@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { FiGrid, FiHome, FiUsers, FiCalendar, FiLogOut, FiKey, FiBookOpen, FiClipboard, FiMail } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ mobileOpen, onNavigate }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -11,8 +11,12 @@ export default function AdminSidebar() {
     navigate('/');
   };
 
+  const handleNav = () => {
+    onNavigate?.();
+  };
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-mark">⚙️</div>
         <div className="brand-name">Admin Panel</div>
@@ -20,49 +24,49 @@ export default function AdminSidebar() {
 
       <nav className="sidebar-nav">
         <div className="nav-section-label">Admin</div>
-        <NavLink to="/admin" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin" end onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiGrid />
           </span>
           Dashboard
         </NavLink>
-        <NavLink to="/admin/apartments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/apartments" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiHome />
           </span>
           Apartments
         </NavLink>
-        <NavLink to="/admin/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/users" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiUsers />
           </span>
           Users
         </NavLink>
-        <NavLink to="/admin/meetups" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/meetups" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiCalendar />
           </span>
           Meet-Ups
         </NavLink>
-        <NavLink to="/admin/access-codes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/access-codes" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiKey />
           </span>
           Access Codes
         </NavLink>
-        <NavLink to="/admin/schools" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/schools" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiBookOpen />
           </span>
           Schools
         </NavLink>
-        <NavLink to="/admin/school-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/school-requests" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiMail />
           </span>
           School Requests
         </NavLink>
-        <NavLink to="/admin/listings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/admin/listings" onClick={handleNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <span className="nav-icon">
             <FiClipboard />
           </span>
@@ -78,4 +82,3 @@ export default function AdminSidebar() {
     </aside>
   );
 }
-

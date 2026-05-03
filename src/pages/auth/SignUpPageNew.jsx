@@ -341,6 +341,7 @@ export default function SignUpPageNew() {
   const [touched, setTouched] = useState({});
 
   const accessCode = useMemo(() => sessionStorage.getItem('accessCode') || '', []);
+  const accessCodeType = useMemo(() => sessionStorage.getItem('accessCodeType') || '', []);
 
   const [statesLoading, setStatesLoading] = useState(false);
   const [schools, setSchools] = useState([]);
@@ -353,8 +354,13 @@ export default function SignUpPageNew() {
     if (!accessCode) {
       toast.error('Please enter a valid access code first');
       navigate('/access-code', { replace: true });
+      return;
     }
-  }, [accessCode, navigate]);
+    if (accessCodeType === 'landlord') {
+      toast.error('Use a resident access code to sign up');
+      navigate('/access-code', { replace: true });
+    }
+  }, [accessCode, accessCodeType, navigate]);
 
   useEffect(() => {
     const loadSchools = async () => {
@@ -492,11 +498,12 @@ export default function SignUpPageNew() {
         personalityVibe: form.personalityVibe,
         guestsAndVisitors: form.guestsAndVisitors,
         hobbies: form.hobbies || '',
+        signupState: form.selectedState,
       };
 
       await register(payload);
       toast.success('✅ Profile created!');
-      navigate('/browse');
+      navigate('/subscription');
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to create profile');
     } finally {

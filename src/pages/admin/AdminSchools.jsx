@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
-import AdminSidebar from '../../components/Layout/AdminSidebar';
-import TopBar from '../../components/Layout/TopBar';
+import AdminAppShell from '../../components/Layout/AdminAppShell';
 
 export default function AdminSchools() {
   const [schools, setSchools] = useState([]);
@@ -96,15 +95,11 @@ export default function AdminSchools() {
   const offCampusSelected = useMemo(() => new Set(form.offCampusPartners || []), [form.offCampusPartners]);
 
   return (
-    <div className="app-layout">
-      <AdminSidebar />
-      <div className="main-content">
-        <TopBar title="Schools" />
-        <div className="page-body">
+    <AdminAppShell title="Schools">
           <div className="card" style={{ marginBottom: 16, padding: 14 }}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>{editing ? 'Edit School' : 'Add School'}</div>
 
-            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+            <div className="form-grid">
               <div className="form-group">
                 <label className="form-label">Name</label>
                 <input className="form-input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
@@ -150,7 +145,7 @@ export default function AdminSchools() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div className="admin-form-actions">
               <button
                 className="btn btn-secondary"
                 type="button"
@@ -161,7 +156,7 @@ export default function AdminSchools() {
               >
                 Reset
               </button>
-              <button className="btn btn-primary" type="button" disabled={saving} style={{ flex: 1 }} onClick={submit}>
+              <button className="btn btn-primary" type="button" disabled={saving} onClick={submit}>
                 {saving ? 'Saving...' : editing ? 'Save Changes' : 'Add School'}
               </button>
             </div>
@@ -195,7 +190,7 @@ export default function AdminSchools() {
                       <td>{Array.isArray(s.offCampusPartners) ? s.offCampusPartners.length : 0}</td>
                       <td>{s.userCount ?? '—'}</td>
                       <td>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className="admin-table-actions">
                           <button className="btn btn-secondary btn-xs" onClick={() => beginEdit(s)}>
                             Edit
                           </button>
@@ -210,9 +205,7 @@ export default function AdminSchools() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminAppShell>
   );
 }
 

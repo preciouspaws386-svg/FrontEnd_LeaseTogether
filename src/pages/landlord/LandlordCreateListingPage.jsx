@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import TopBar from '../../components/Layout/TopBar';
 import { compressImage } from '../../utils/compressImage';
+import { US_STATES } from '../../data/usStates';
 
 const EMPTY_FORM = {
   school: '',
@@ -31,6 +32,7 @@ const CATEGORIES = ['For Rent', 'Sublease'];
 export default function LandlordCreateListingPage() {
   const navigate = useNavigate();
 
+  const [selectedState, setSelectedState] = useState('');
   const [schools, setSchools] = useState([]);
   const [loadingSchools, setLoadingSchools] = useState(false);
 
@@ -54,19 +56,25 @@ export default function LandlordCreateListingPage() {
 
   useEffect(() => {
     if (checking) return;
+    if (!selectedState) {
+      setSchools([]);
+      setForm((f) => ({ ...f, school: '' }));
+      return;
+    }
     const loadSchools = async () => {
       setLoadingSchools(true);
       try {
-        const res = await api.get('/auth/schools');
+        const res = await api.get(`/auth/schools?state=${encodeURIComponent(selectedState)}`);
         setSchools(res.data?.schools || []);
       } catch (err) {
         toast.error(err.response?.data?.message || 'Failed to load schools');
+        setSchools([]);
       } finally {
         setLoadingSchools(false);
       }
     };
     loadSchools();
-  }, [checking]);
+  }, [checking, selectedState]);
 
   const photoPreviewUrls = useMemo(() => (form.photos || []).filter(Boolean), [form.photos]);
 
@@ -97,6 +105,7 @@ export default function LandlordCreateListingPage() {
   };
 
   const validate = () => {
+    if (!selectedState) return 'Please select a state';
     if (!form.school) return 'Please select your school';
     if (!form.type) return 'Please select a listing type';
     if (!form.listingCategory) return 'Please select a listing category';
@@ -117,6 +126,7 @@ export default function LandlordCreateListingPage() {
     try {
       const payload = {
         ...form,
+        listingState: selectedState,
         pricePerMonth: Number(form.pricePerMonth),
         deposit: form.deposit === '' || form.deposit == null ? undefined : Number(form.deposit),
         petDeposit: form.petDeposit === '' || form.petDeposit == null ? undefined : Number(form.petDeposit),
@@ -127,7 +137,6 @@ export default function LandlordCreateListingPage() {
       await api.post('/listings', payload);
       toast.success('Listing posted successfully');
 
-      // Clear code so it can't accidentally be reused for user signup.
       sessionStorage.removeItem('accessCode');
       sessionStorage.removeItem('accessCodeType');
       navigate('/access-code', { replace: true });
@@ -138,6 +147,17 @@ export default function LandlordCreateListingPage() {
     }
   };
 
+  if (checking) {
+    return (
+      <div className="app-layout">
+        <div className="main-content">
+          <TopBar title="Create Listing" />
+          <div className="page-body">Loading…</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-layout">
       <div className="main-content">
@@ -145,14 +165,41 @@ export default function LandlordCreateListingPage() {
         <div className="page-body">
           <div className="card" style={{ padding: 14, maxWidth: 980, margin: '0 auto' }}>
             <div className="page-subtitle" style={{ marginBottom: 14 }}>
-              Post a listing using your landlord access code.
+              Post a listing using your landlord access code. Choose a state first, then the school for that state.
             </div>
 
             <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div className="form-group">
+                <label className="form-label">State *</label>
+                <select
+                  className="form-select"
+                  value={selectedState}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedState(v);
+                    setForm((f) => ({ ...f, school: '' }));
+                  }}
+                >
+                  <option value="">Select state</option>
+                  {US_STATES.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label className="form-label">School *</label>
-                <select className="form-select" value={form.school} onChange={(e) => set('school', e.target.value)} disabled={loadingSchools || checking}>
-                  <option value="">{loadingSchools ? 'Loading…' : 'Select school'}</option>
+                <select
+                  className="form-select"
+                  value={form.school}
+                  onChange={(e) => set('school', e.target.value)}
+                  disabled={loadingSchools || !selectedState}
+                >
+                  <option value="">
+                    {!selectedState ? 'Select a state first' : loadingSchools ? 'Loading…' : schools.length ? 'Select school' : 'No schools for this state'}
+                  </option>
                   {schools.map((s) => (
                     <option key={s._id} value={s._id}>
                       {s.name}
@@ -160,7 +207,9 @@ export default function LandlordCreateListingPage() {
                   ))}
                 </select>
               </div>
+            </div>
 
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
                 <select className="form-select" value={form.type} onChange={(e) => set('type', e.target.value)}>
@@ -171,9 +220,6 @@ export default function LandlordCreateListingPage() {
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Category *</label>
                 <select className="form-select" value={form.listingCategory} onChange={(e) => set('listingCategory', e.target.value)}>
@@ -184,7 +230,9 @@ export default function LandlordCreateListingPage() {
                   ))}
                 </select>
               </div>
+            </div>
 
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Distance *</label>
                 <select className="form-select" value={form.distanceFromSchool} onChange={(e) => set('distanceFromSchool', e.target.value)}>
@@ -195,13 +243,13 @@ export default function LandlordCreateListingPage() {
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Price / Month *</label>
                 <input className="form-input" type="number" min={1} value={form.pricePerMonth} onChange={(e) => set('pricePerMonth', e.target.value)} />
               </div>
+            </div>
+
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Bedrooms *</label>
                 <select className="form-select" value={form.bedrooms} onChange={(e) => set('bedrooms', e.target.value)}>
@@ -212,17 +260,15 @@ export default function LandlordCreateListingPage() {
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
               <div className="form-group">
                 <label className="form-label">Deposit</label>
                 <input className="form-input" type="number" min={0} value={form.deposit} onChange={(e) => set('deposit', e.target.value)} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Contact Phone *</label>
-                <input className="form-input" value={form.contactPhone} onChange={(e) => set('contactPhone', e.target.value)} />
-              </div>
+            </div>
+
+            <div className="form-group" style={{ marginTop: 12 }}>
+              <label className="form-label">Contact Phone *</label>
+              <input className="form-input" value={form.contactPhone} onChange={(e) => set('contactPhone', e.target.value)} />
             </div>
 
             <div className="form-group" style={{ marginTop: 12 }}>
@@ -326,4 +372,3 @@ export default function LandlordCreateListingPage() {
     </div>
   );
 }
-
