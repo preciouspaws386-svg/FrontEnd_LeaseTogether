@@ -25,8 +25,9 @@ export default function AdminApartments() {
 
   const load = async () => {
     try {
-      const res = await api.get('/admin/apartments');
-      setApartments(res.data.apartments || []);
+      const res = await api.get('/admin/apartments', { params: { _t: Date.now() } });
+      const list = res.data?.apartments;
+      setApartments(Array.isArray(list) ? list : []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load apartments');
     }
@@ -83,9 +84,14 @@ export default function AdminApartments() {
     <AdminAppShell
       title="Apartments"
       topRight={
-        <button className="btn btn-primary btn-sm" onClick={() => { setForm(EMPTY); setAddOpen(true); }}>
-          + Add Apartment
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => load()}>
+            Refresh
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => { setForm(EMPTY); setAddOpen(true); }}>
+            + Add Apartment
+          </button>
+        </div>
       }
     >
           <div className="table-wrapper">
@@ -110,7 +116,7 @@ export default function AdminApartments() {
                   </tr>
                 ) : (
                   apartments.map((a) => (
-                    <tr key={a._id}>
+                    <tr key={String(a._id)}>
                       <td style={{ fontWeight: 700 }}>{a.name}</td>
                       <td>{a.address}</td>
                       <td>{a.city}</td>

@@ -19,8 +19,9 @@ export default function AdminSchools() {
 
   const load = async () => {
     try {
-      const res = await api.get('/admin/schools');
-      setSchools(res.data?.schools || []);
+      const res = await api.get('/admin/schools', { params: { _t: Date.now() } });
+      const list = res.data?.schools;
+      setSchools(Array.isArray(list) ? list : []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load schools');
     }
@@ -28,8 +29,9 @@ export default function AdminSchools() {
 
   const loadApartments = async () => {
     try {
-      const res = await api.get('/admin/apartments');
-      setApartments(res.data?.apartments || []);
+      const res = await api.get('/admin/apartments', { params: { _t: Date.now() } });
+      const list = res.data?.apartments;
+      setApartments(Array.isArray(list) ? list : []);
     } catch {
       setApartments([]);
     }
@@ -88,14 +90,30 @@ export default function AdminSchools() {
       name: s.name || '',
       state: s.state || '',
       onCampusLocations: Array.isArray(s.onCampusLocations) ? s.onCampusLocations.join(', ') : '',
-      offCampusPartners: Array.isArray(s.offCampusPartners) ? s.offCampusPartners.map((p) => (typeof p === 'string' ? p : p._id)) : [],
+      offCampusPartners: Array.isArray(s.offCampusPartners)
+        ? s.offCampusPartners.map((p) => String(typeof p === 'string' ? p : p._id))
+        : [],
     });
   };
 
-  const offCampusSelected = useMemo(() => new Set(form.offCampusPartners || []), [form.offCampusPartners]);
+  const offCampusSelected = useMemo(() => new Set((form.offCampusPartners || []).map(String)), [form.offCampusPartners]);
 
   return (
-    <AdminAppShell title="Schools">
+    <AdminAppShell
+      title="Schools"
+      topRight={
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => {
+            load();
+            loadApartments();
+          }}
+        >
+          Refresh
+        </button>
+      }
+    >
           <div className="card" style={{ marginBottom: 16, padding: 14 }}>
             <div style={{ fontWeight: 900, marginBottom: 10 }}>{editing ? 'Edit School' : 'Add School'}</div>
 
@@ -124,16 +142,17 @@ export default function AdminSchools() {
               <label className="form-label">Off-campus apartment partners</label>
               <div className="opts" style={{ maxHeight: 160, overflowY: 'auto' }}>
                 {apartments.map((a) => {
-                  const on = offCampusSelected.has(a._id);
+                  const aid = String(a._id);
+                  const on = offCampusSelected.has(aid);
                   return (
                     <div
-                      key={a._id}
+                      key={aid}
                       className={`opt ${on ? 'on' : ''}`}
                       onClick={() => {
                         setForm((f) => {
-                          const set = new Set(f.offCampusPartners || []);
-                          if (set.has(a._id)) set.delete(a._id);
-                          else set.add(a._id);
+                          const set = new Set((f.offCampusPartners || []).map(String));
+                          if (set.has(aid)) set.delete(aid);
+                          else set.add(aid);
                           return { ...f, offCampusPartners: Array.from(set) };
                         });
                       }}
@@ -183,7 +202,7 @@ export default function AdminSchools() {
                   </tr>
                 ) : (
                   schools.map((s) => (
-                    <tr key={s._id}>
+                    <tr key={String(s._id)}>
                       <td style={{ fontWeight: 800 }}>{s.name}</td>
                       <td>{s.state}</td>
                       <td>{Array.isArray(s.onCampusLocations) ? s.onCampusLocations.length : 0}</td>

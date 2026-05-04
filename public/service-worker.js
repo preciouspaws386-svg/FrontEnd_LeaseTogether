@@ -1,5 +1,5 @@
 /* LeaseTogether PWA — cache shell and same-origin GET assets; offline fallback */
-const CACHE_NAME = 'leasetogether-v1';
+const CACHE_NAME = 'leasetogether-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
       .open(CACHE_NAME)
       .then((cache) =>
         cache
-          .addAll(['./', './index.html', './manifest.json', './favicon.ico', './logo192.png', './logo512.png'])
+          .addAll(['./', './index.html', './manifest.json', './logo.png'])
           .catch(() => {})
       )
       .then(() => self.skipWaiting())
