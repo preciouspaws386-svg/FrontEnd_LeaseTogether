@@ -27,7 +27,9 @@ export default function AdminUsers() {
     api
       .get('/admin/apartments')
       .then((r) => setApartments(r.data.apartments || []))
-      .catch(() => {});
+      .catch((err) => {
+        toast.error(err.response?.data?.message || 'Failed to load apartments');
+      });
     loadUsers('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -51,6 +53,20 @@ export default function AdminUsers() {
       await loadUsers(apartmentId);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to reset school');
+    }
+  };
+
+  const deleteUser = async (u) => {
+    if (u.role === 'admin') {
+      return toast.error('Admin account cannot be deleted');
+    }
+    if (!window.confirm(`Delete ${u.firstName} ${u.lastInitial}. permanently? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/users/${u._id}`);
+      toast.success('User deleted permanently');
+      await loadUsers(apartmentId);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -139,6 +155,14 @@ export default function AdminUsers() {
                           </button>
                           <button className="btn btn-secondary btn-xs" onClick={() => resetSchool(u)}>
                             Reset School
+                          </button>
+                          <button
+                            className="btn btn-danger-ghost btn-xs"
+                            onClick={() => deleteUser(u)}
+                            disabled={u.role === 'admin'}
+                            title={u.role === 'admin' ? 'Admin account cannot be deleted' : 'Delete user permanently'}
+                          >
+                            Delete
                           </button>
                         </div>
                       </td>
