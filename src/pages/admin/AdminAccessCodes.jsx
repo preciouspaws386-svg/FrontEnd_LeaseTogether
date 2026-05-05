@@ -3,6 +3,10 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import AdminAppShell from '../../components/Layout/AdminAppShell';
 
+/**
+ * Access-code policy:
+ * Access codes grant 7 days free trial, then subscription kicks in.
+ */
 export default function AdminAccessCodes() {
   const [codes, setCodes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +19,7 @@ export default function AdminAccessCodes() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/access-codes');
+      const res = await api.get('/admin/access-codes', { params: { _t: Date.now() } });
       setCodes(res.data?.codes || []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load access codes');
@@ -28,7 +32,8 @@ export default function AdminAccessCodes() {
     try {
       const res = await api.get('/admin/apartments');
       setApartments(res.data?.apartments || []);
-    } catch {
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load apartments');
       setApartments([]);
     }
   };

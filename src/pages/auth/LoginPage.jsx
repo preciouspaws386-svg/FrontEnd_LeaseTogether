@@ -4,6 +4,20 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/authForestTheme.css';
 
+/**
+ * Access-code policy:
+ * Access codes grant 7 days free trial, then subscription kicks in.
+ */
+const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+const hasActiveAccess = (user) => {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (user.subscriptionActive) return true;
+  if (!user.trialActive || !user.trialStartDate) return false;
+  const startedAt = new Date(user.trialStartDate).getTime();
+  return Number.isFinite(startedAt) && Date.now() - startedAt < TRIAL_MS;
+};
+
 function ForestWatermark() {
   return (
     <svg className="auth-forest-watermark" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -30,7 +44,7 @@ export default function LoginPage() {
       toast.success('Signed in');
       if (user.role === 'admin') {
         navigate('/admin');
-      } else if (!user.subscriptionActive) {
+      } else if (!hasActiveAccess(user)) {
         navigate('/subscription');
       } else {
         navigate('/browse');

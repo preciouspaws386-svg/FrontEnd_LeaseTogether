@@ -4,6 +4,10 @@ import api from '../../api/axios';
 import AdminAppShell from '../../components/Layout/AdminAppShell';
 import StatusBadge from '../../components/UI/StatusBadge';
 
+/**
+ * Access-code policy:
+ * Access codes grant 7 days free trial, then subscription kicks in.
+ */
 export default function AdminUsers() {
   const [apartments, setApartments] = useState([]);
   const [users, setUsers] = useState([]);
@@ -12,7 +16,7 @@ export default function AdminUsers() {
   const loadUsers = async (aptId) => {
     try {
       const q = aptId ? `?apartmentId=${aptId}` : '';
-      const res = await api.get(`/admin/users${q}`);
+      const res = await api.get(`/admin/users${q}${q ? '&' : '?'}_t=${Date.now()}`);
       setUsers(res.data.users || []);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to load users');

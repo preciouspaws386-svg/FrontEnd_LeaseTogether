@@ -3,6 +3,10 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import AdminAppShell from '../../components/Layout/AdminAppShell';
 
+/**
+ * Access-code policy:
+ * Access codes grant 7 days free trial, then subscription kicks in.
+ */
 export default function AdminSchools() {
   const [schools, setSchools] = useState([]);
   const [apartments, setApartments] = useState([]);
@@ -32,7 +36,8 @@ export default function AdminSchools() {
       const res = await api.get('/admin/apartments', { params: { _t: Date.now() } });
       const list = res.data?.apartments;
       setApartments(Array.isArray(list) ? list : []);
-    } catch {
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to load apartments');
       setApartments([]);
     }
   };

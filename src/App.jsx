@@ -26,13 +26,27 @@ import AdminListings from './pages/admin/AdminListings';
 import AdminSchoolRequests from './pages/admin/AdminSchoolRequests';
 import SubscriptionPage from './pages/SubscriptionPage';
 
+/**
+ * Access-code policy:
+ * Access codes grant 7 days free trial, then subscription kicks in.
+ */
+const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+const hasActiveAccess = (user) => {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (user.subscriptionActive) return true;
+  if (!user.trialActive || !user.trialStartDate) return false;
+  const startedAt = new Date(user.trialStartDate).getTime();
+  return Number.isFinite(startedAt) && Date.now() - startedAt < TRIAL_MS;
+};
+
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
   if (loading) return <div className="loading-screen">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && user.role !== 'admin') return <Navigate to="/browse" replace />;
-  if (!adminOnly && user.role !== 'admin' && !user.subscriptionActive) {
+  if (!adminOnly && !hasActiveAccess(user)) {
     return <Navigate to="/subscription" replace />;
   }
   if (!adminOnly && !user.school && location.pathname !== '/select-school') {
