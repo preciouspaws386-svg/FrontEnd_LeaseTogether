@@ -57,7 +57,7 @@ export default function MatchContactForm({ meetup, currentUserId, schoolName, on
 
       {completed ? (
         <div style={{ padding: '10px 12px', border: '1px solid var(--accent-line)', background: 'rgba(59,130,246,0.08)', borderRadius: 12 }}>
-          Congratulations 🎉 You will receive a text message shortly with your match's contact information.
+          Congratulations 🎉You will receive a confirmation Email shortly!.
         </div>
       ) : alreadySubmitted ? (
         <div style={{ padding: '10px 12px', border: '1px solid var(--line-2)', background: 'rgba(255,255,255,0.02)', borderRadius: 12, fontSize: 13.5, color: 'var(--grey-2)', marginBottom: 12 }}>
