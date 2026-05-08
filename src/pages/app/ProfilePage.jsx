@@ -35,6 +35,82 @@ const RELIGION_OPTIONS = [
 const TRANSPORTATION_OPTIONS = ['Car', 'Bike', 'Uber/Rideshare', 'Walk', 'Public Transit'];
 
 const YEAR_IN_SCHOOL_OPTIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate', 'Other'];
+const PROFILE_ANSWER_SECTIONS = [
+  {
+    title: 'Basics',
+    rows: [
+      ['Age', (u) => u.age],
+      ['Year in school', (u) => u.yearInSchool],
+      ['Major', (u) => u.major],
+      ['Move-in timeframe', (u) => u.moveInTimeframe],
+      ['Monthly budget', (u) => u.monthlyBudget],
+      ['Roommate preference', (u) => u.roommatePreference],
+      ['LGBTQ+ friendly', (u) => (u.lgbtqFriendly ? 'Yes' : 'No')],
+      ['Religion', (u) => u.religion],
+      ['Transportation', (u) => (Array.isArray(u.transportation) ? u.transportation : [])],
+      ['Hobbies', (u) => u.hobbies],
+    ],
+  },
+  {
+    title: 'Lifestyle Vibes',
+    rows: [
+      ['How often do you party?', (u) => u?.lifestyleVibes?.partyingFrequency],
+      ['Do you drink?', (u) => u?.lifestyleVibes?.drinking],
+      ['Do you smoke or vape?', (u) => u?.lifestyleVibes?.smoking],
+      ['Marijuana/substances', (u) => u?.lifestyleVibes?.marijuana],
+      ['Roommate who parties', (u) => u?.lifestyleVibes?.roommatePartying],
+      ['Roommate who drinks', (u) => u?.lifestyleVibes?.roommateDrinking],
+      ['Roommate who smokes', (u) => u?.lifestyleVibes?.roommateSmoking],
+      ['Sleep schedule', (u) => u?.lifestyleVibes?.sleepSchedule],
+      ['Home noise level', (u) => u?.lifestyleVibes?.homeNoise],
+      ['Pets', (u) => u?.lifestyleVibes?.pets],
+      ['Overnight guests okay?', (u) => u?.lifestyleVibes?.overnightGuestsOkay],
+      ['Significant other stays over', (u) => u?.lifestyleVibes?.significantOther],
+    ],
+  },
+  {
+    title: 'Living Together',
+    rows: [
+      ['Cleanliness', (u) => u?.livingTogether?.cleanliness],
+      ['Chores', (u) => u?.livingTogether?.chores],
+      ['Shared spaces', (u) => u?.livingTogether?.sharedSpaces],
+      ['Food sharing', (u) => u?.livingTogether?.foodSharing],
+      ['Cooking', (u) => u?.livingTogether?.cooking],
+      ['Home time', (u) => u?.livingTogether?.homeTime],
+      ['Study/work style at home', (u) => u?.livingTogether?.studyWork],
+      ['Shared items', (u) => u?.livingTogether?.sharedItems],
+      ['Bills/responsibilities', (u) => u?.livingTogether?.bills],
+    ],
+  },
+  {
+    title: 'Personality & Vibe',
+    rows: [
+      ['Social vibe', (u) => u?.personalityVibe?.socialVibe],
+      ['Weekend plans', (u) => u?.personalityVibe?.weekendPlans],
+      ['Energy level', (u) => u?.personalityVibe?.energyLevel],
+      ['Conflict style', (u) => u?.personalityVibe?.conflictStyle],
+      ['Personal space', (u) => u?.personalityVibe?.personalSpace],
+      ['Lifestyle pace', (u) => u?.personalityVibe?.lifestylePace],
+      ['Recharge style', (u) => u?.personalityVibe?.rechargeStyle],
+      ['Most valued in roommate', (u) => u?.personalityVibe?.roommateValue],
+      ['Daily routine', (u) => u?.personalityVibe?.dailyRoutine],
+      ['Communication style', (u) => u?.personalityVibe?.communicationStyle],
+    ],
+  },
+  {
+    title: 'Guests & Visitors',
+    rows: [
+      ['Guest frequency', (u) => u?.guestsAndVisitors?.guestFrequency],
+      ['Overnight guests', (u) => u?.guestsAndVisitors?.overnightGuests],
+    ],
+  },
+];
+
+function displayAnswer(value) {
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
+  if (value === 0) return '0';
+  return value ? String(value) : '—';
+}
 
 export default function ProfilePage() {
   const { user, updateStatus, updateProfile, updatePhotos } = useAuth();
@@ -221,21 +297,19 @@ export default function ProfilePage() {
                 ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
-              {[
-                ['Age', user.age],
-                ['Year', user.yearInSchool],
-                ['Major', user.major],
-                ['Move-in', user.moveInTimeframe],
-                ['Social vibe', user?.personalityVibe?.socialVibe?.[0]],
-                ['Routine', user?.personalityVibe?.dailyRoutine?.[0]],
-              ].map(([k, v]) => (
-                <div key={k}>
-                  <div style={{ fontSize: 11, color: 'var(--grey-2)', marginBottom: 2 }}>{k}</div>
-                  <div style={{ fontSize: 13 }}>{v || '—'}</div>
+            {PROFILE_ANSWER_SECTIONS.map((section) => (
+              <div key={section.title} style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--grey-2)', marginBottom: 8 }}>{section.title}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {section.rows.map(([k, getter]) => (
+                    <div key={k}>
+                      <div style={{ fontSize: 11, color: 'var(--grey-2)', marginBottom: 2 }}>{k}</div>
+                      <div style={{ fontSize: 13 }}>{displayAnswer(getter(user))}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
 
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 12.5, color: 'var(--grey-2)', marginBottom: 8 }}>
